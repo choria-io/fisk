@@ -1,4 +1,4 @@
-package kingpin
+package fisk
 
 import (
 	"fmt"
@@ -151,7 +151,7 @@ func (c *cmdGroup) cmdNames() []string {
 	return names
 }
 
-// GetArg gets a command definition.
+// GetCommand gets a command definition.
 //
 // This allows existing commands to be modified after definition but before parsing. Useful for
 // modular applications.

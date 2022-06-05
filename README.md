@@ -2,7 +2,9 @@
 
 Fisk is a [fluent-style](http://en.wikipedia.org/wiki/Fluent_interface), type-safe command-line parser. It supports flags, nested commands, and positional arguments.
 
-This is a fork of [kingpin](https://github.com/alecthomas/kingpin), a very nice CLI framework that has been in limbo for a few years. As this project and others we work on are heavily invested in Kingpin we thought to revive it for our needs.
+This is a fork of [kingpin](https://github.com/alecthomas/kingpin), a very nice CLI framework that has been in limbo for a few years. As this project and others we 
+work on are heavily invested in Kingpin we thought to revive it for our needs. We'll likely make some breaking changes, so kingpin is kind of serving as a starting
+point here rather than this being designed as a direct continuation of that project.
 
 For full help and intro see [kingpin](https://github.com/alecthomas/kingpin), this README will focus on our local changes.
 
@@ -23,3 +25,4 @@ Some historical points in time are kept:
  * Renamed `master` branch to `main`
  * Incorporate `github.com/alecthomas/units` and `github.com/alecthomas/template` as local packages
  * Changes to make `staticcheck` happy
+ * A new default template that shortens the help on large apps, old default preserved as `KingpinDefaultUsageTemplate`

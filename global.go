@@ -1,4 +1,4 @@
-package kingpin
+package fisk
 
 import (
 	"os"
@@ -77,7 +77,7 @@ func Usage() {
 	CommandLine.Usage(os.Args[1:])
 }
 
-// Set global usage template to use (defaults to DefaultUsageTemplate).
+// Set global usage template to use (defaults to KingpinDefaultUsageTemplate).
 func UsageTemplate(template string) *Application {
 	return CommandLine.UsageTemplate(template)
 }

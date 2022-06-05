@@ -1,12 +1,11 @@
-package kingpin
+package fisk
 
 import (
 	"io/ioutil"
 	"os"
+	"testing"
 
 	"github.com/stretchr/testify/assert"
-
-	"testing"
 )
 
 func TestBool(t *testing.T) {

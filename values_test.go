@@ -1,11 +1,10 @@
-package kingpin
+package fisk
 
 import (
 	"net"
+	"testing"
 
 	"github.com/stretchr/testify/assert"
-
-	"testing"
 )
 
 func TestAccumulatorStrings(t *testing.T) {

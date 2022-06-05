@@ -1,4 +1,4 @@
-package kingpin
+package fisk
 
 import (
 	"os"

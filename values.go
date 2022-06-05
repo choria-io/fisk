@@ -1,4 +1,4 @@
-package kingpin
+package fisk
 
 //go:generate go run ./cmd/genvalues/main.go
 

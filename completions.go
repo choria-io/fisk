@@ -1,4 +1,4 @@
-package kingpin
+package fisk
 
 // HintAction is a function type who is expected to return a slice of possible
 // command line arguments.

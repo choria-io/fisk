@@ -1,4 +1,4 @@
-package kingpin
+package fisk
 
 import (
 	"bytes"
@@ -39,7 +39,7 @@ xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 
 func TestHiddenCommand(t *testing.T) {
 	templates := []struct{ name, template string }{
-		{"default", DefaultUsageTemplate},
+		{"default", KingpinDefaultUsageTemplate},
 		{"Compact", CompactUsageTemplate},
 		{"Long", LongHelpTemplate},
 		{"Man", ManPageTemplate},
@@ -83,7 +83,7 @@ func TestCmdClause_HelpLong(t *testing.T) {
 	tpl := `{{define "FormatUsage"}}{{.HelpLong}}{{end}}\
 {{template "FormatUsage" .Context.SelectedCommand}}`
 
-	a := New("test", "Test").Writer(&buf).Terminate(nil)
+	a := New("test", "Test").Writer(&buf).Terminate(nil).UsageTemplate(KingpinDefaultUsageTemplate)
 	a.UsageTemplate(tpl)
 	a.Command("command", "short help text").HelpLong("long help text")
 
@@ -95,7 +95,7 @@ func TestCmdClause_HelpLong(t *testing.T) {
 func TestArgEnvVar(t *testing.T) {
 	var buf bytes.Buffer
 
-	a := New("test", "Test").Writer(&buf).Terminate(nil)
+	a := New("test", "Test").Writer(&buf).Terminate(nil).UsageTemplate(KingpinDefaultUsageTemplate)
 	a.Arg("arg", "Enable arg").Envar("ARG").String()
 	a.Flag("flag", "Enable flag").Envar("FLAG").String()
 
@@ -103,4 +103,30 @@ func TestArgEnvVar(t *testing.T) {
 	usage := buf.String()
 	assert.Contains(t, usage, "($ARG)")
 	assert.Contains(t, usage, "($FLAG)")
+}
+
+func TestShortMainUSage(t *testing.T) {
+	var buf bytes.Buffer
+
+	a := New("test", "Test Command").UsageWriter(&buf).Terminate(nil)
+	sub := a.Command("sub", "Sub command").HelpLong("sub long help")
+	sub.Command("subsub1", "Subsub2 command").HelpLong("subsub1 long help")
+	sub.Command("subsub2", "Subsub2 command")
+
+	a.UsageTemplate(ShorterMainUsageTemplate)
+
+	a.Parse([]string{"--help"})
+	assert.NotContains(t, buf.String(), "long help")
+
+	buf.Reset()
+	a.Parse([]string{"sub", "--help"})
+	assert.Contains(t, buf.String(), "sub long help")
+	assert.NotContains(t, buf.String(), "subsub1 long help")
+	assert.NotContains(t, buf.String(), "subsub2 long help")
+
+	buf.Reset()
+	a.Parse([]string{"sub", "subsub1", "--help"})
+	assert.NotContains(t, buf.String(), "sub long help")
+	assert.Contains(t, buf.String(), "subsub1 long help")
+	assert.NotContains(t, buf.String(), "subsub2 long help")
 }

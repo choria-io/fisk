@@ -1,14 +1,13 @@
-package kingpin
+package fisk
 
 import (
 	"io/ioutil"
 	"net"
 	"net/url"
 	"os"
+	"testing"
 
 	"github.com/stretchr/testify/assert"
-
-	"testing"
 )
 
 func TestParseStrings(t *testing.T) {
