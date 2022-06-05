@@ -9,21 +9,21 @@ import (
 	"os"
 	"strings"
 
-	"gopkg.in/alecthomas/kingpin.v2"
+	"github.com/choria-io/fisk"
 )
 
 var (
-	timeout = kingpin.Flag("timeout", "Set connection timeout.").Short('t').Default("5s").Duration()
-	headers = HTTPHeader(kingpin.Flag("headers", "Add HTTP headers to the request.").Short('H').PlaceHolder("HEADER=VALUE"))
+	timeout = fisk.Flag("timeout", "Set connection timeout.").Short('t').Default("5s").Duration()
+	headers = HTTPHeader(fisk.Flag("headers", "Add HTTP headers to the request.").Short('H').PlaceHolder("HEADER=VALUE"))
 
-	get         = kingpin.Command("get", "GET a resource.").Default()
+	get         = fisk.Command("get", "GET a resource.").Default()
 	getFlag     = get.Flag("test", "Test flag").Bool()
 	getURL      = get.Command("url", "Retrieve a URL.").Default()
 	getURLURL   = getURL.Arg("url", "URL to GET.").Required().URL()
 	getFile     = get.Command("file", "Retrieve a file.")
 	getFileFile = getFile.Arg("file", "File to retrieve.").Required().ExistingFile()
 
-	post           = kingpin.Command("post", "POST a resource.")
+	post           = fisk.Command("post", "POST a resource.")
 	postData       = post.Flag("data", "Key-value data to POST").Short('d').PlaceHolder("KEY:VALUE").StringMap()
 	postBinaryFile = post.Flag("data-binary", "File with binary data to POST.").File()
 	postURL        = post.Arg("url", "URL to POST to.").Required().URL()
@@ -44,7 +44,7 @@ func (h HTTPHeaderValue) String() string {
 	return ""
 }
 
-func HTTPHeader(s kingpin.Settings) (target *http.Header) {
+func HTTPHeader(s fisk.Settings) (target *http.Header) {
 	target = &http.Header{}
 	s.SetValue((*HTTPHeaderValue)(target))
 	return
@@ -93,13 +93,13 @@ func applyPOST() error {
 }
 
 func main() {
-	kingpin.UsageTemplate(kingpin.CompactUsageTemplate).Version("1.0").Author("Alec Thomas")
-	kingpin.CommandLine.Help = "An example implementation of curl."
-	switch kingpin.Parse() {
+	fisk.UsageTemplate(fisk.CompactUsageTemplate).Version("1.0").Author("Alec Thomas")
+	fisk.CommandLine.Help = "An example implementation of curl."
+	switch fisk.Parse() {
 	case "get url":
-		kingpin.FatalIfError(apply("GET", (*getURLURL).String()), "GET failed")
+		fisk.FatalIfError(apply("GET", (*getURLURL).String()), "GET failed")
 
 	case "post":
-		kingpin.FatalIfError(applyPOST(), "POST failed")
+		fisk.FatalIfError(applyPOST(), "POST failed")
 	}
 }

@@ -6,7 +6,7 @@ import (
 	"strings"
 )
 
-// Data model for Kingpin command-line structure.
+// Data model for Fisk command-line structure.
 
 var (
 	ignoreInCount = map[string]bool{

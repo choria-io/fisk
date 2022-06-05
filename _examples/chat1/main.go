@@ -3,18 +3,18 @@ package main
 import (
 	"fmt"
 
-	"gopkg.in/alecthomas/kingpin.v2"
+	"github.com/choria-io/fisk"
 )
 
 var (
-	debug   = kingpin.Flag("debug", "Enable debug mode.").Bool()
-	timeout = kingpin.Flag("timeout", "Timeout waiting for ping.").Default("5s").Envar("PING_TIMEOUT").Short('t').Duration()
-	ip      = kingpin.Arg("ip", "IP address to ping.").Required().IP()
-	count   = kingpin.Arg("count", "Number of packets to send").Int()
+	debug   = fisk.Flag("debug", "Enable debug mode.").Bool()
+	timeout = fisk.Flag("timeout", "Timeout waiting for ping.").Default("5s").Envar("PING_TIMEOUT").Short('t').Duration()
+	ip      = fisk.Arg("ip", "IP address to ping.").Required().IP()
+	count   = fisk.Arg("count", "Number of packets to send").Int()
 )
 
 func main() {
-	kingpin.Version("0.0.1")
-	kingpin.Parse()
+	fisk.Version("0.0.1")
+	fisk.Parse()
 	fmt.Printf("Would ping: %s with timeout %s and count %d", *ip, *timeout, *count)
 }
