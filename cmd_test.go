@@ -1,12 +1,11 @@
-package kingpin
+package fisk
 
 import (
 	"sort"
 	"strings"
+	"testing"
 
 	"github.com/stretchr/testify/assert"
-
-	"testing"
 )
 
 func parseAndExecute(app *Application, context *ParseContext) (string, error) {

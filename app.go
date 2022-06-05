@@ -1,4 +1,4 @@
-package kingpin
+package fisk
 
 import (
 	"fmt"
@@ -55,13 +55,13 @@ func New(name, help string) *Application {
 		Help:          help,
 		errorWriter:   os.Stderr, // Left for backwards compatibility purposes.
 		usageWriter:   os.Stderr,
-		usageTemplate: DefaultUsageTemplate,
+		usageTemplate: ShorterMainUsageTemplate,
 		terminate:     os.Exit,
 	}
 	a.flagGroup = newFlagGroup()
 	a.argGroup = newArgGroup()
 	a.cmdGroup = newCmdGroup(a)
-	a.HelpFlag = a.Flag("help", "Show context-sensitive help (also try --help-long and --help-man).")
+	a.HelpFlag = a.Flag("help", "Show context-sensitive help")
 	a.HelpFlag.Bool()
 	a.Flag("help-long", "Generate long help.").Hidden().PreAction(a.generateLongHelp).Bool()
 	a.Flag("help-man", "Generate a man page.").Hidden().PreAction(a.generateManPage).Bool()

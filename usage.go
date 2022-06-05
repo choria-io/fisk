@@ -1,6 +1,7 @@
-package kingpin
+package fisk
 
 import (
+	"bufio"
 	"bytes"
 	"fmt"
 	"go/doc"
@@ -76,7 +77,7 @@ func formatCmdUsage(app *ApplicationModel, cmd *CmdModel) string {
 func formatFlag(haveShort bool, flag *FlagModel) string {
 	flagString := ""
 	flagName := flag.Name
-	if flag.IsBoolFlag() {
+	if flag.IsBoolFlag() && flag.Name != "help" {
 		flagName = "[no-]" + flagName
 	}
 	if flag.Short != 0 {
@@ -199,6 +200,15 @@ func (a *Application) UsageForContextWithTemplate(context *ParseContext, indent 
 		},
 		"Char": func(c rune) string {
 			return string(c)
+		},
+		"FirstLine": func(v string) string {
+			if v == "" {
+				return v
+			}
+
+			scanner := bufio.NewScanner(strings.NewReader(v))
+			scanner.Scan()
+			return scanner.Text()
 		},
 	}
 	for k, v := range a.usageFuncs {

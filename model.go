@@ -1,4 +1,4 @@
-package kingpin
+package fisk
 
 import (
 	"fmt"
@@ -34,7 +34,7 @@ func (f *FlagGroupModel) FlagSummary() string {
 		}
 
 		if flag.Required {
-			if flag.IsBoolFlag() {
+			if flag.IsBoolFlag() && flag.Name != "help" {
 				out = append(out, fmt.Sprintf("--[no-]%s", flag.Name))
 			} else {
 				out = append(out, fmt.Sprintf("--%s=%s", flag.Name, flag.FormatPlaceHolder()))

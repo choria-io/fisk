@@ -1,7 +1,78 @@
-package kingpin
+package fisk
 
-// Default usage template.
-var DefaultUsageTemplate = `{{define "FormatCommand"}}\
+// ShorterMainUsageTemplate is similar to KingpinDefaultUsageTemplate except
+// in the main app usage output it does not expand full help text for
+// every single sub command all the way to the deepest leve, it also
+// does not show global flags in the top app.
+//
+// Additionally, it supports the new HelpLong on sub commands so one can
+// either rely on it always printing just the first line of sub command help
+// or only putting short help in the main help and long help in long - the
+// long will only be shown when it's rendering usage for that command when it's
+// the command the user is executing (select).
+//
+// This yields a friendlier welcome to new users with the details should
+// they do help on any sub command
+var ShorterMainUsageTemplate = `{{define "FormatCommand"}}\
+{{if .FlagSummary}} {{.FlagSummary}}{{end}}\
+{{range .Args}} {{if not .Required}}[{{end}}<{{.Name}}>{{if .Value|IsCumulative}}...{{end}}{{if not .Required}}]{{end}}{{end}}\
+{{end}}\
+
+{{define "FormatCommands"}}\
+{{range .Commands}}\
+{{if not .Hidden}}\
+  {{.FullCommand}}{{if .Default}}*{{end}}{{template "FormatCommand" .}}
+{{.Help|Wrap 4}}
+{{end}}\
+{{end}}\
+{{end}}\
+
+{{ define "FormatCommandsForTopLevel" }}\
+{{range .Commands}}\
+{{if not .Hidden}}\
+{{if not (eq .FullCommand "help")}}\
+  {{.FullCommand}}{{if .Default}}*{{end}}{{template "FormatCommand" .}}
+{{.Help|FirstLine|Wrap 4}}
+{{end}}\
+{{end}}\
+{{end}}\
+{{end}}\
+
+{{define "FormatUsage"}}\
+{{template "FormatCommand" .}}{{if .Commands}} <command> [<args> ...]{{end}}
+{{if .Help}}
+{{.Help|Wrap 0}}\
+{{end}}\
+{{end}}\
+
+{{if .Context.SelectedCommand}}\
+usage: {{.App.Name}} {{.Context.SelectedCommand}}{{template "FormatUsage" .Context.SelectedCommand}}
+{{if .Context.SelectedCommand.HelpLong}}{{.Context.SelectedCommand.HelpLong}}
+{{end}}
+{{else}}\
+usage: {{.App.Name}}{{template "FormatUsage" .App}}
+{{end}}\
+{{if .Context.SelectedCommand}}\
+{{if .Context.Flags}}\
+Flags:
+{{.Context.Flags|FlagsToTwoColumns|FormatTwoColumns}}
+{{end}}\
+{{if .Context.Args}}\
+Args:
+{{.Context.Args|ArgsToTwoColumns|FormatTwoColumns}}
+{{end}}\
+{{if len .Context.SelectedCommand.Commands}}\
+Subcommands:
+{{template "FormatCommands" .Context.SelectedCommand}}
+{{end}}\
+{{else if .App.Commands}}\
+Commands:
+{{template "FormatCommandsForTopLevel" .App}}
+{{end}}\
+`
+
+// KingpinDefaultUsageTemplate is the default usage template as used by kingpin
+var KingpinDefaultUsageTemplate = `{{define "FormatCommand"}}\
 {{if .FlagSummary}} {{.FlagSummary}}{{end}}\
 {{range .Args}}{{if not .Hidden}} {{if not .Required}}[{{end}}{{if .PlaceHolder}}{{.PlaceHolder}}{{else}}<{{.Name}}>{{end}}{{if .Value|IsCumulative}}...{{end}}{{if not .Required}}]{{end}}{{end}}{{end}}\
 {{end}}\

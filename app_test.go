@@ -1,19 +1,18 @@
-package kingpin
+package fisk
 
 import (
 	"errors"
 	"io/ioutil"
-
-	"github.com/stretchr/testify/assert"
-
 	"sort"
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func newTestApp() *Application {
-	return New("test", "").Terminate(nil)
+	return New("test", "").Terminate(nil).UsageTemplate(KingpinDefaultUsageTemplate)
 }
 
 func TestCommander(t *testing.T) {
