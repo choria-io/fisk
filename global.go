@@ -6,15 +6,15 @@ import (
 )
 
 var (
-	// CommandLine is the default Kingpin parser.
+	// CommandLine is the default fisk parser.
 	CommandLine = New(filepath.Base(os.Args[0]), "")
-	// Global help flag. Exposed for user customisation.
+	// HelpFlag global help flag. Exposed for user customisation.
 	HelpFlag = CommandLine.HelpFlag
-	// Top-level help command. Exposed for user customisation. May be nil.
+	// HelpCommand Top-level help command. Exposed for user customisation. May be nil.
 	HelpCommand = CommandLine.HelpCommand
-	// Global version flag. Exposed for user customisation. May be nil.
+	// VersionFlag global version flag. Exposed for user customisation. May be nil.
 	VersionFlag = CommandLine.VersionFlag
-	// Whether to file expansion with '@' is enabled.
+	// EnableFileExpansion whether to file expansion with '@' is enabled.
 	EnableFileExpansion = true
 )
 

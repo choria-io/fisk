@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"gopkg.in/alecthomas/kingpin.v2"
+	"github.com/choria-io/fisk"
 )
 
 func listHosts() []string {
@@ -22,12 +22,12 @@ type NetcatCommand struct {
 	format   string
 }
 
-func (n *NetcatCommand) run(c *kingpin.ParseContext) error {
+func (n *NetcatCommand) run(c *fisk.ParseContext) error {
 	fmt.Printf("Would have run netcat to hostname %v, port %d, and output format %v\n", n.hostName, n.port, n.format)
 	return nil
 }
 
-func configureNetcatCommand(app *kingpin.Application) {
+func configureNetcatCommand(app *fisk.Application) {
 	c := &NetcatCommand{}
 	nc := app.Command("nc", "Connect to a Host").Action(c.run)
 	nc.Flag("nop-flag", "Example of a flag with no options").Bool()
@@ -72,8 +72,8 @@ func configureNetcatCommand(app *kingpin.Application) {
 		Enum("option1", "option2")
 }
 
-func addSubCommand(app *kingpin.Application, name string, description string) {
-	c := app.Command(name, description).Action(func(c *kingpin.ParseContext) error {
+func addSubCommand(app *fisk.Application, name string, description string) {
+	c := app.Command(name, description).Action(func(c *fisk.ParseContext) error {
 		fmt.Printf("Would have run command %s.\n", name)
 		return nil
 	})
@@ -81,7 +81,7 @@ func addSubCommand(app *kingpin.Application, name string, description string) {
 }
 
 func main() {
-	app := kingpin.New("completion", "My application with bash completion.")
+	app := fisk.New("completion", "My application with bash completion.")
 	app.Flag("flag-1", "").String()
 	app.Flag("flag-2", "").HintOptions("opt1", "opt2").String()
 
@@ -92,5 +92,5 @@ func main() {
 	addSubCommand(app, "ping", "Additional top level command to show command completion")
 	addSubCommand(app, "nmap", "Additional top level command to show command completion")
 
-	kingpin.MustParse(app.Parse(os.Args[1:]))
+	fisk.MustParse(app.Parse(os.Args[1:]))
 }

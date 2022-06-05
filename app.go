@@ -48,7 +48,7 @@ type Application struct {
 	VersionFlag *FlagClause
 }
 
-// New creates a new Kingpin application instance.
+// New creates a new Fisk application instance.
 func New(name, help string) *Application {
 	a := &Application{
 		Name:          name,

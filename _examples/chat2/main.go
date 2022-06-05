@@ -4,11 +4,11 @@ import (
 	"os"
 	"strings"
 
-	"gopkg.in/alecthomas/kingpin.v2"
+	"github.com/choria-io/fisk"
 )
 
 var (
-	app      = kingpin.New("chat", "A command-line chat application.")
+	app      = fisk.New("chat", "A command-line chat application.")
 	debug    = app.Flag("debug", "Enable debug mode.").Bool()
 	serverIP = app.Flag("server", "Server address.").Default("127.0.0.1").IP()
 
@@ -23,7 +23,7 @@ var (
 )
 
 func main() {
-	switch kingpin.MustParse(app.Parse(os.Args[1:])) {
+	switch fisk.MustParse(app.Parse(os.Args[1:])) {
 	// Register user
 	case register.FullCommand():
 		println(*registerNick)
