@@ -34,7 +34,7 @@ func (f *FlagGroupModel) FlagSummary() string {
 		}
 
 		if flag.Required {
-			if flag.IsBoolFlag() && flag.Name != "help" {
+			if flag.IsBoolFlag() && flag.Name != "help" && flag.Name != "version" {
 				out = append(out, fmt.Sprintf("--[no-]%s", flag.Name))
 			} else {
 				out = append(out, fmt.Sprintf("--%s=%s", flag.Name, flag.FormatPlaceHolder()))
