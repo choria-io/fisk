@@ -26,3 +26,37 @@ Some historical points in time are kept:
  * Incorporate `github.com/alecthomas/units` and `github.com/alecthomas/template` as local packages
  * Changes to make `staticcheck` happy
  * A new default template that shortens the help on large apps, old default preserved as `KingpinDefaultUsageTemplate`
+
+## Cheats
+
+I really like [cheat](https://github.com/cheat/cheat), a great little tool that gives access to bite-sized hints on what's great about a CLI tool.
+
+Fisk supports cheats natively, you can get cheat formatted hints right from the app with no extra dependencies or export cheats into the `cheat` app for use via its interface and integrations.
+
+```nohighlight
+$ nats cheat pub
+# To publish 100 messages with a random body between 100 and 1000 characters
+nats pub destination.subject "{{ Random 100 1000 }}" -H Count:{{ Count }} --count 100
+```
+
+Let's look how that is done:
+
+```go
+// WithCheats() enables cheats without adding any to the top, you
+// can also just call Cheat() at the top to both set a cheat and enable it
+// once enabled at the top all cheats in all sub commands are accessible
+nats := fisk.New("nats", "NATS Utility").WithCheats()
+
+pub := nats.Command("pub", "Publish utility")
+pub.Cheat(`# To publish 100 messages with a random.....`)
+```
+
+After that your app will have a new command `cheat` that gives access to the cheats. It will show
+a list of cheats when trying to access a command without cheats or when running `nats cheat --list`.
+
+```nohighlight
+$ nats cheat unknown
+Available Cheats:
+
+  nats/pub
+```

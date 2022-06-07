@@ -71,6 +71,38 @@ Commands:
 {{end}}\
 `
 
+// CheatTemplate renders cheat format help for an app
+var CheatTemplate = `{{if .Context.SelectedCommand }}\
+{{if .Context.SelectedCommand.Cheat }}\
+{{ .Context.SelectedCommand.Cheat }}
+{{else}}\
+{{if gt (CheatCommands | Count) 0}}\
+Available Cheats:
+
+{{ range CheatCommands }}\
+   {{.}}
+{{end}}\
+{{else}}\
+No cheats defined
+{{end}}\
+{{end}}\
+{{else}}\
+{{ if .App.Cheat }}\
+{{.App.Cheat}}
+{{else}}\
+{{if gt (CheatCommands | Count) 0}}\
+Available Cheats:
+
+{{ range CheatCommands }}\
+   {{.}}
+{{end}}\
+{{else}}\
+No cheats defined
+{{end}}\
+{{end}}\
+{{end}}\
+`
+
 // KingpinDefaultUsageTemplate is the default usage template as used by kingpin
 var KingpinDefaultUsageTemplate = `{{define "FormatCommand"}}\
 {{if .FlagSummary}} {{.FlagSummary}}{{end}}\
@@ -118,7 +150,7 @@ Commands:
 {{end}}\
 `
 
-// Usage template where command's optional flags are listed separately
+// SeparateOptionalFlagsUsageTemplate is a usage template where command's optional flags are listed separately
 var SeparateOptionalFlagsUsageTemplate = `{{define "FormatCommand"}}\
 {{if .FlagSummary}} {{.FlagSummary}}{{end}}\
 {{range .Args}}{{if not .Hidden}} {{if not .Required}}[{{end}}{{if .PlaceHolder}}{{.PlaceHolder}}{{else}}<{{.Name}}>{{end}}{{if .Value|IsCumulative}}...{{end}}{{if not .Required}}]{{end}}{{end}}{{end}}\
@@ -169,7 +201,7 @@ Commands:
 {{end}}\
 `
 
-// Usage template with compactly formatted commands.
+// CompactUsageTemplate is a usage template with compactly formatted commands.
 var CompactUsageTemplate = `{{define "FormatCommand"}}\
 {{if .FlagSummary}} {{.FlagSummary}}{{end}}\
 {{range .Args}}{{if not .Hidden}} {{if not .Required}}[{{end}}{{if .PlaceHolder}}{{.PlaceHolder}}{{else}}<{{.Name}}>{{end}}{{if .Value|IsCumulative}}...{{end}}{{if not .Required}}]{{end}}{{end}}{{end}}\
@@ -217,6 +249,7 @@ Commands:
 {{end}}\
 `
 
+// ManPageTemplate renders usage in unix man format
 var ManPageTemplate = `{{define "FormatFlags"}}\
 {{range .Flags}}\
 {{if not .Hidden}}\
@@ -264,7 +297,7 @@ var ManPageTemplate = `{{define "FormatFlags"}}\
 {{end}}\
 `
 
-// Default usage template.
+// LongHelpTemplate is a usage template for --help-long
 var LongHelpTemplate = `{{define "FormatCommand"}}\
 {{if .FlagSummary}} {{.FlagSummary}}{{end}}\
 {{range .Args}}{{if not .Hidden}} {{if not .Required}}[{{end}}{{if .PlaceHolder}}{{.PlaceHolder}}{{else}}<{{.Name}}>{{end}}{{if .Value|IsCumulative}}...{{end}}{{if not .Required}}]{{end}}{{end}}{{end}}\

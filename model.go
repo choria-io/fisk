@@ -166,6 +166,7 @@ type CmdModel struct {
 	Aliases     []string
 	Help        string
 	HelpLong    string
+	Cheat       string
 	FullCommand string
 	Depth       int
 	Hidden      bool
@@ -182,6 +183,7 @@ func (c *CmdModel) String() string {
 type ApplicationModel struct {
 	Name    string
 	Help    string
+	Cheat   string
 	Version string
 	Author  string
 	*ArgGroupModel
@@ -193,6 +195,7 @@ func (a *Application) Model() *ApplicationModel {
 	return &ApplicationModel{
 		Name:           a.Name,
 		Help:           a.Help,
+		Cheat:          a.cheat,
 		Version:        a.version,
 		Author:         a.author,
 		FlagGroupModel: a.flagGroup.Model(),
@@ -262,6 +265,7 @@ func (c *CmdClause) Model() *CmdModel {
 		Aliases:        c.aliases,
 		Help:           c.help,
 		HelpLong:       c.helpLong,
+		Cheat:          c.cheat,
 		Depth:          depth,
 		Hidden:         c.hidden,
 		Default:        c.isDefault,

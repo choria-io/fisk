@@ -5,6 +5,7 @@ import (
 	"io"
 	"os"
 	"regexp"
+	"sort"
 	"strings"
 	"text/template"
 )
@@ -28,6 +29,7 @@ type Application struct {
 	Name string
 	Help string
 
+	cheat          string
 	author         string
 	version        string
 	errorWriter    io.Writer // Destination for errors.
@@ -46,6 +48,8 @@ type Application struct {
 	HelpCommand *CmdClause
 	// Version flag. Exposed for user customisation. May be nil.
 	VersionFlag *FlagClause
+	// Cheat command. Exposed for user customisation. May be nil.
+	CheatCommand *CmdClause
 }
 
 // New creates a new Fisk application instance.
@@ -189,7 +193,6 @@ func (a *Application) parseContext(ignoreDefault bool, args []string) (*ParseCon
 // This will populate all flag and argument values, call all callbacks, and so
 // on.
 func (a *Application) Parse(args []string) (command string, err error) {
-
 	context, parseErr := a.ParseContext(args)
 	var selected []string
 	var setValuesErr error
@@ -259,6 +262,54 @@ func (a *Application) maybeHelp(context *ParseContext) {
 	}
 }
 
+// WithCheat enables support for rendering cheat compatible output
+//
+// See https://github.com/cheat/cheat for information about this format
+func (a *Application) WithCheat() *Application {
+	var commands []string
+	var list bool
+
+	a.CheatCommand = a.Command("cheat", "Shows cheats for commands").PreAction(func(pc *ParseContext) error {
+		var context *ParseContext
+		if list {
+			context, _ = a.parseContext(true, []string{"cheat"})
+		} else {
+			if len(commands) > 0 {
+				if len(commands) == 1 {
+					commands = strings.Split(commands[0], "/")
+				}
+
+				if commands[0] == a.Name {
+					commands = commands[1:]
+				}
+			}
+
+			context, _ = a.parseContext(true, commands)
+		}
+		err := a.UsageForContextWithTemplate(context, 2, CheatTemplate)
+		if err != nil {
+			return err
+		}
+
+		a.terminate(0)
+		return nil
+	})
+	a.CheatCommand.Arg("command", "Command to show cheats for").StringsVar(&commands)
+	a.CheatCommand.Flag("list", "List available cheats").BoolVar(&list)
+
+	return a
+}
+
+// Cheat sets the cheat text to associate with this application
+func (a *Application) Cheat(cheat string) *Application {
+	a.cheat = cheat
+	if a.CheatCommand == nil {
+		a.WithCheat()
+	}
+
+	return a
+}
+
 // Version adds a --version flag for displaying the application version.
 func (a *Application) Version(version string) *Application {
 	a.version = version
@@ -287,7 +338,7 @@ func (a *Application) Action(action Action) *Application {
 	return a
 }
 
-// Action called after parsing completes but before validation and execution.
+// PreAction action called after parsing completes but before validation and execution.
 func (a *Application) PreAction(action Action) *Application {
 	a.addPreAction(action)
 	return a
@@ -688,6 +739,23 @@ func (a *Application) completionOptions(context *ParseContext) []string {
 func (a *Application) generateBashCompletion(context *ParseContext) {
 	options := a.completionOptions(context)
 	fmt.Printf("%s", strings.Join(options, "\n"))
+}
+
+func (a *Application) cheatList() []string {
+	cheats := []string{}
+	if a.cheat != "" {
+		cheats = append(cheats, a.Name)
+	}
+
+	for _, cmd := range a.commands {
+		for _, c := range cmd.cheatCommands() {
+			cheats = append(cheats, fmt.Sprintf("%s/%s", a.Name, c))
+		}
+	}
+
+	sort.Strings(cheats)
+
+	return cheats
 }
 
 func envarTransform(name string) string {
