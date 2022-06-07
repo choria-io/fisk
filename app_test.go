@@ -1,6 +1,7 @@
 package fisk
 
 import (
+	"bytes"
 	"errors"
 	"io/ioutil"
 	"sort"
@@ -432,4 +433,107 @@ func TestCmdValidation(t *testing.T) {
 
 	_, err = c.Parse([]string{"cmd", "--a", "A"})
 	assert.NoError(t, err)
+}
+
+func TestCheatTopLevel(t *testing.T) {
+	var buf bytes.Buffer
+	c := newTestApp()
+	c.Cheat(`# top cheat`)
+	c.Command("sub", "Sub commands").Cheat("# sub cheat")
+	c.Command("without", "Sub without cheat")
+
+	c.UsageWriter(&buf)
+	_, err := c.Parse([]string{"cheat"})
+	assert.NoError(t, err)
+	expected := "# top cheat\n"
+	assert.Equal(t, expected, buf.String())
+}
+
+func TestCheatTopLevelWithout(t *testing.T) {
+	var buf bytes.Buffer
+	c := newTestApp()
+	c.WithCheat()
+	c.Command("sub", "Sub commands")
+	c.Command("without", "Sub without cheat")
+
+	c.UsageWriter(&buf)
+	_, err := c.Parse([]string{"cheat"})
+	assert.NoError(t, err)
+	expected := "No cheats defined\n"
+	assert.Equal(t, expected, buf.String())
+}
+
+func TestCheatWithPath(t *testing.T) {
+	var buf bytes.Buffer
+	c := newTestApp()
+	c.WithCheat()
+	c.Command("sub", "Sub commands").Cheat("sub cheat")
+	c.Command("without", "Sub without cheat")
+
+	c.UsageWriter(&buf)
+	_, err := c.Parse([]string{"cheat", "test/sub"})
+	assert.NoError(t, err)
+	expected := "sub cheat\n"
+	assert.Equal(t, expected, buf.String())
+}
+
+func TestCheatSubLevel(t *testing.T) {
+	var buf bytes.Buffer
+	c := newTestApp()
+	c.Cheat(`# top cheat`)
+	c.Command("sub", "Sub commands").Cheat("# sub cheat")
+	c.Command("without", "Sub without cheat")
+
+	c.UsageWriter(&buf)
+	_, err := c.Parse([]string{"cheat", "sub"})
+	assert.NoError(t, err)
+	expected := "# sub cheat\n"
+	assert.Equal(t, expected, buf.String())
+
+}
+
+func TestCheatSubWithout(t *testing.T) {
+	var buf bytes.Buffer
+	c := newTestApp()
+	c.Cheat(`# top cheat`)
+	s := c.Command("sub", "Sub commands").Cheat("# sub cheat")
+	s.Command("subsbub", "Subsub command")
+	w := c.Command("without", "Sub without cheat")
+	w.Command("with", "sub with").Cheat("without -> with")
+	w.Command("also_with", "sub with").Cheat("without -> also_with")
+
+	c.UsageWriter(&buf)
+	_, err := c.Parse([]string{"cheat", "without"})
+	assert.NoError(t, err)
+	expected := `Available Cheats:
+
+   test
+   test/sub
+   test/without/also_with
+   test/without/with
+`
+	assert.Equal(t, expected, buf.String())
+}
+
+func TestCheatList(t *testing.T) {
+	var buf bytes.Buffer
+	c := newTestApp()
+	c.Cheat(`# top cheat`)
+	s := c.Command("sub", "Sub commands").Cheat("# sub cheat")
+	s.Command("subsbub", "Subsub command")
+	w := c.Command("without", "Sub without cheat")
+	w.Command("with", "sub with").Cheat("without -> with")
+	w.Command("also_with", "sub with").Cheat("without -> also_with")
+
+	c.UsageWriter(&buf)
+	_, err := c.Parse([]string{"cheat", "--list"})
+	assert.NoError(t, err)
+	expected := `Available Cheats:
+
+   test
+   test/sub
+   test/without/also_with
+   test/without/with
+`
+	assert.Equal(t, expected, buf.String())
 }
