@@ -2,6 +2,7 @@ package fisk
 
 import (
 	"fmt"
+	"io/fs"
 	"strings"
 )
 
@@ -245,6 +246,14 @@ func newCommand(app *Application, name, help string) *CmdClause {
 	c.argGroup = newArgGroup()
 	c.cmdGroup = newCmdGroup(app)
 	return c
+}
+
+// CheatFile reads a file from fs and use its contents to call Cheat(). Read errors are fatal.
+func (c *CmdClause) CheatFile(fs fs.ReadFileFS, cheat string, file string) *CmdClause {
+	body, err := fs.ReadFile(file)
+	c.app.FatalIfError(err, "cannot load cheat: %v", err)
+
+	return c.Cheat(cheat, string(body))
 }
 
 // Cheat sets the cheat help text to associate with this command,

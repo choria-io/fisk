@@ -3,6 +3,7 @@ package fisk
 import (
 	"fmt"
 	"io"
+	"io/fs"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -358,7 +359,7 @@ func (a *Application) WithCheats(tags ...string) *Application {
 		dir   string
 	)
 
-	a.CheatCommand = a.Command("cheat", fmt.Sprintf("Shows cheats for %s", a.Name)).Action(func(pc *ParseContext) error {
+	a.CheatCommand = a.Commandf("cheat", "Shows cheats for %s", a.Name).Action(func(pc *ParseContext) error {
 		switch {
 		case dir != "":
 			return a.saveCheats(dir)
@@ -405,6 +406,14 @@ See https://github.com/cheat/cheat for more details`)
 	a.CheatCommand.Flag("save", "Saves the cheats to the given directory").PlaceHolder("DIRECTORY").StringVar(&dir)
 
 	return a
+}
+
+// CheatFile reads a file from fs and use its contents to call Cheat(). Read errors are fatal.
+func (a *Application) CheatFile(fs fs.ReadFileFS, cheat string, file string) *Application {
+	body, err := fs.ReadFile(file)
+	a.FatalIfError(err, "cannot load cheat: %v", err)
+
+	return a.Cheat(cheat, string(body))
 }
 
 // Cheat sets the cheat help text to associate with this application,
