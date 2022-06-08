@@ -453,7 +453,7 @@ func TestCheatTopLevel(t *testing.T) {
 func TestCheatTopLevelWithout(t *testing.T) {
 	var buf bytes.Buffer
 	c := newTestApp()
-	c.WithCheat()
+	c.WithCheats()
 	c.Command("sub", "Sub commands")
 	c.Command("without", "Sub without cheat")
 
@@ -481,7 +481,7 @@ func TestCheatSubLevel(t *testing.T) {
 
 func TestCheatSubWithout(t *testing.T) {
 	var buf bytes.Buffer
-	c := newTestApp().WithCheat()
+	c := newTestApp().WithCheats()
 	s := c.Command("sub", "Sub commands").Cheat("sub", "# sub cheat")
 	s.Command("subsbub", "Subsub command")
 	w := c.Command("without", "Sub without cheat")
@@ -520,6 +520,21 @@ func TestCheatList(t *testing.T) {
     also
     sub
     with
+`
+	assert.Equal(t, expected, buf.String())
+}
+
+func TestCheatShowDefaultNotList(t *testing.T) {
+	var buf bytes.Buffer
+	c := newTestApp().Cheat("", `# top cheat`)
+	s := c.Command("sub", "Sub commands")
+	s.Command("subsbub", "Subsub command")
+	c.Command("without", "Sub without cheat")
+
+	c.UsageWriter(&buf)
+	_, err := c.Parse([]string{"cheat"})
+	assert.NoError(t, err)
+	expected := `# top cheat
 `
 	assert.Equal(t, expected, buf.String())
 }

@@ -26,6 +26,7 @@ Some historical points in time are kept:
  * Incorporate `github.com/alecthomas/units` and `github.com/alecthomas/template` as local packages
  * Changes to make `staticcheck` happy
  * A new default template that shortens the help on large apps, old default preserved as `KingpinDefaultUsageTemplate`
+ * Integration with [cheat](https://github.com/cheat/cheat) (see below)
 
 ## Cheats
 
