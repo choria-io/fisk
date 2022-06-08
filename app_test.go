@@ -563,3 +563,16 @@ Saved cheat to {{dir}}/with
 `
 	assert.Equal(t, strings.ReplaceAll(expected, "{{dir}}", td), buf.String())
 }
+
+func TestNewF(t *testing.T) {
+	app := Newf("test", "foo %s", "bar")
+	assert.Equal(t, app.Help, "foo bar")
+}
+
+func TestCommandf(t *testing.T) {
+	c := newTestApp()
+	x := c.Commandf("x", "foo %s", "bar")
+	y := x.Commandf("y", "foo bar %s", "baz")
+	assert.Equal(t, x.help, "foo bar")
+	assert.Equal(t, y.help, "foo bar baz")
+}
