@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"errors"
 	"io/ioutil"
+	"os"
 	"sort"
 	"strings"
 	"testing"
@@ -438,12 +439,12 @@ func TestCmdValidation(t *testing.T) {
 func TestCheatTopLevel(t *testing.T) {
 	var buf bytes.Buffer
 	c := newTestApp()
-	c.Cheat(`# top cheat`)
-	c.Command("sub", "Sub commands").Cheat("# sub cheat")
+	c.Cheat("", `# top cheat`)
+	c.Command("sub", "Sub commands").Cheat("sub", "# sub cheat")
 	c.Command("without", "Sub without cheat")
 
 	c.UsageWriter(&buf)
-	_, err := c.Parse([]string{"cheat"})
+	_, err := c.Parse([]string{"cheat", "test"})
 	assert.NoError(t, err)
 	expected := "# top cheat\n"
 	assert.Equal(t, expected, buf.String())
@@ -463,25 +464,11 @@ func TestCheatTopLevelWithout(t *testing.T) {
 	assert.Equal(t, expected, buf.String())
 }
 
-func TestCheatWithPath(t *testing.T) {
-	var buf bytes.Buffer
-	c := newTestApp()
-	c.WithCheat()
-	c.Command("sub", "Sub commands").Cheat("sub cheat")
-	c.Command("without", "Sub without cheat")
-
-	c.UsageWriter(&buf)
-	_, err := c.Parse([]string{"cheat", "test/sub"})
-	assert.NoError(t, err)
-	expected := "sub cheat\n"
-	assert.Equal(t, expected, buf.String())
-}
-
 func TestCheatSubLevel(t *testing.T) {
 	var buf bytes.Buffer
 	c := newTestApp()
-	c.Cheat(`# top cheat`)
-	c.Command("sub", "Sub commands").Cheat("# sub cheat")
+	c.Cheat("", `# top cheat`)
+	c.Command("sub", "Sub commands").Cheat("sub", "# sub cheat")
 	c.Command("without", "Sub without cheat")
 
 	c.UsageWriter(&buf)
@@ -494,46 +481,70 @@ func TestCheatSubLevel(t *testing.T) {
 
 func TestCheatSubWithout(t *testing.T) {
 	var buf bytes.Buffer
-	c := newTestApp()
-	c.Cheat(`# top cheat`)
-	s := c.Command("sub", "Sub commands").Cheat("# sub cheat")
+	c := newTestApp().WithCheat()
+	s := c.Command("sub", "Sub commands").Cheat("sub", "# sub cheat")
 	s.Command("subsbub", "Subsub command")
 	w := c.Command("without", "Sub without cheat")
-	w.Command("with", "sub with").Cheat("without -> with")
-	w.Command("also_with", "sub with").Cheat("without -> also_with")
+	w.Command("with", "sub with").Cheat("with", "without -> with")
+	w.Command("also_with", "sub with").Cheat("also", "without -> also_with")
 
 	c.UsageWriter(&buf)
 	_, err := c.Parse([]string{"cheat", "without"})
 	assert.NoError(t, err)
 	expected := `Available Cheats:
 
-   test
-   test/sub
-   test/without/also_with
-   test/without/with
+    also
+    sub
+    with
 `
+
 	assert.Equal(t, expected, buf.String())
 }
 
 func TestCheatList(t *testing.T) {
 	var buf bytes.Buffer
 	c := newTestApp()
-	c.Cheat(`# top cheat`)
-	s := c.Command("sub", "Sub commands").Cheat("# sub cheat")
+	c.Cheat("", `# top cheat`)
+	s := c.Command("sub", "Sub commands").Cheat("sub", "# sub cheat")
 	s.Command("subsbub", "Subsub command")
 	w := c.Command("without", "Sub without cheat")
-	w.Command("with", "sub with").Cheat("without -> with")
-	w.Command("also_with", "sub with").Cheat("without -> also_with")
+	w.Command("with", "sub with").Cheat("with", "without -> with")
+	w.Command("also_with", "sub with").Cheat("also", "without -> also_with")
 
 	c.UsageWriter(&buf)
 	_, err := c.Parse([]string{"cheat", "--list"})
 	assert.NoError(t, err)
 	expected := `Available Cheats:
 
-   test
-   test/sub
-   test/without/also_with
-   test/without/with
+    test
+    also
+    sub
+    with
 `
 	assert.Equal(t, expected, buf.String())
+}
+
+func TestCheatSave(t *testing.T) {
+	var buf bytes.Buffer
+	c := newTestApp()
+	c.Cheat("", `# top cheat`)
+	s := c.Command("sub", "Sub commands").Cheat("sub", "# sub cheat")
+	s.Command("subsbub", "Subsub command")
+	w := c.Command("without", "Sub without cheat")
+	w.Command("with", "sub with").Cheat("with", "without -> with")
+	w.Command("also_with", "sub with").Cheat("also", "without -> also_with")
+
+	td, err := os.MkdirTemp("", "")
+	assert.NoError(t, err)
+	defer os.RemoveAll(td)
+
+	c.UsageWriter(&buf)
+	_, err = c.Parse([]string{"cheat", "--save", td})
+	assert.NoError(t, err)
+	expected := `Saved cheat to {{dir}}/also
+Saved cheat to {{dir}}/sub
+Saved cheat to {{dir}}/test
+Saved cheat to {{dir}}/with
+`
+	assert.Equal(t, strings.ReplaceAll(expected, "{{dir}}", td), buf.String())
 }

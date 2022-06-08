@@ -229,7 +229,6 @@ type CmdClause struct {
 	aliases        []string
 	help           string
 	helpLong       string
-	cheat          string
 	isDefault      bool
 	validator      CmdClauseValidator
 	hidden         bool
@@ -248,9 +247,20 @@ func newCommand(app *Application, name, help string) *CmdClause {
 	return c
 }
 
-// Cheat sets the cheat text to associate with this command
-func (c *CmdClause) Cheat(cheat string) *CmdClause {
-	c.cheat = cheat
+// Cheat sets the cheat help text to associate with this command,
+// the cheat is the name it will be surfaced as in help, if empty it's the
+// name of the command.
+func (c *CmdClause) Cheat(cheat string, help string) *CmdClause {
+	if help == "" {
+		return c
+	}
+
+	if cheat == "" {
+		cheat = c.name
+	}
+
+	c.app.cheats[cheat] = help
+
 	return c
 }
 
@@ -330,27 +340,4 @@ func (c *CmdClause) Hidden() *CmdClause {
 func (c *CmdClause) HelpLong(help string) *CmdClause {
 	c.helpLong = help
 	return c
-}
-
-func (c *CmdClause) cheatCommands() (res []string) {
-	if c.cheat != "" {
-		res = append(res, c.name)
-	}
-
-	for _, sc := range c.commands {
-		if sc.name == "cheat" {
-			continue
-		}
-
-		if sc.cheat != "" {
-			res = append(res, fmt.Sprintf("%s/%s", c.name, sc.name))
-		}
-
-		if len(sc.commands) > 0 {
-			res = append(res, sc.cheatCommands()...)
-		}
-	}
-
-	return res
-
 }

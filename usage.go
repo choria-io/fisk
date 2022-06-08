@@ -210,12 +210,6 @@ func (a *Application) UsageForContextWithTemplate(context *ParseContext, indent 
 			scanner.Scan()
 			return scanner.Text()
 		},
-		"CheatCommands": func() []string {
-			return a.cheatList()
-		},
-		"Count": func(i []string) int {
-			return len(i)
-		},
 	}
 	for k, v := range a.usageFuncs {
 		funcs[k] = v

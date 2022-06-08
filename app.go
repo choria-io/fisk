@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path/filepath"
 	"regexp"
 	"sort"
 	"strings"
@@ -29,7 +30,6 @@ type Application struct {
 	Name string
 	Help string
 
-	cheat          string
 	author         string
 	version        string
 	errorWriter    io.Writer // Destination for errors.
@@ -41,6 +41,8 @@ type Application struct {
 	noInterspersed bool             // can flags be interspersed with args (or must they come first)
 	defaultEnvars  bool
 	completion     bool
+	cheats         map[string]string
+	cheatTags      []string
 
 	// Help flag. Exposed for user customisation.
 	HelpFlag *FlagClause
@@ -61,12 +63,16 @@ func New(name, help string) *Application {
 		usageWriter:   os.Stderr,
 		usageTemplate: ShorterMainUsageTemplate,
 		terminate:     os.Exit,
+		cheats:        map[string]string{},
+		cheatTags:     []string{name},
 	}
+
 	a.flagGroup = newFlagGroup()
 	a.argGroup = newArgGroup()
 	a.cmdGroup = newCmdGroup(a)
 	a.HelpFlag = a.Flag("help", "Show context-sensitive help")
 	a.HelpFlag.Bool()
+
 	a.Flag("help-long", "Generate long help.").Hidden().PreAction(a.generateLongHelp).Bool()
 	a.Flag("help-man", "Generate a man page.").Hidden().PreAction(a.generateManPage).Bool()
 	a.Flag("completion-bash", "Output possible completions for the given args.").Hidden().BoolVar(&a.completion)
@@ -262,47 +268,140 @@ func (a *Application) maybeHelp(context *ParseContext) {
 	}
 }
 
-// WithCheat enables support for rendering cheat compatible output
-//
-// See https://github.com/cheat/cheat for information about this format
-func (a *Application) WithCheat() *Application {
-	var commands []string
-	var list bool
+func (a *Application) listCheats() {
+	if len(a.cheats) == 0 {
+		fmt.Fprintln(a.usageWriter, "No cheats defined")
+		return
+	}
 
-	a.CheatCommand = a.Command("cheat", "Shows cheats for commands").PreAction(func(pc *ParseContext) error {
-		var context *ParseContext
-		if list {
-			context, _ = a.parseContext(true, []string{"cheat"})
-		} else {
-			if len(commands) > 0 {
-				if len(commands) == 1 {
-					commands = strings.Split(commands[0], "/")
-				}
-
-				if commands[0] == a.Name {
-					commands = commands[1:]
-				}
-			}
-
-			context, _ = a.parseContext(true, commands)
+	list := []string{}
+	top := ""
+	for k := range a.cheats {
+		if k == a.Name {
+			top = a.Name
+			continue
 		}
-		err := a.UsageForContextWithTemplate(context, 2, CheatTemplate)
+		list = append(list, k)
+	}
+	sort.Strings(list)
+	if top != "" {
+		list = append([]string{top}, list...)
+	}
+
+	fmt.Fprintln(a.usageWriter, "Available Cheats:")
+	fmt.Fprintln(a.usageWriter)
+	for _, k := range list {
+		fmt.Fprintf(a.usageWriter, "    %s\n", k)
+	}
+}
+
+func (a *Application) saveCheats(dir string) error {
+	if len(a.cheats) == 0 {
+		return fmt.Errorf("no cheats defined")
+	}
+
+	err := os.MkdirAll(dir, 0744)
+	if err != nil {
+		return err
+	}
+
+	tags := a.cheatTags
+	if len(tags) == 0 {
+		tags = []string{a.Name}
+	}
+
+	list := []string{}
+	for k := range a.cheats {
+		list = append(list, k)
+	}
+	sort.Strings(list)
+
+	for _, k := range list {
+		if a.cheats[k] == "" {
+			continue
+		}
+
+		dest := filepath.Join(dir, k)
+		f, err := os.Create(dest)
 		if err != nil {
 			return err
 		}
 
+		fmt.Fprintf(f, "---\ntags: [%s]\n---\n\n", strings.Join(tags, ", "))
+		fmt.Fprintln(f, a.cheats[k])
+		f.Close()
+
+		fmt.Fprintf(a.usageWriter, "Saved cheat to %s\n", dest)
+
+	}
+
+	return nil
+}
+
+// WithCheat enables support for rendering cheat compatible output,
+// tags can be supplied which would be set when saving cheat files
+//
+// See https://github.com/cheat/cheat for information about this format
+func (a *Application) WithCheat(tags ...string) *Application {
+	if len(tags) > 0 {
+		a.cheatTags = tags
+	}
+
+	var (
+		cheat string
+		list  bool
+		dir   string
+	)
+
+	a.CheatCommand = a.Command("cheat", "Shows cheats for commands").PreAction(func(pc *ParseContext) error {
+		switch {
+		case dir != "":
+			return a.saveCheats(dir)
+
+		case list:
+			a.listCheats()
+
+		default:
+			if cheat == "" {
+				a.listCheats()
+				break
+			}
+
+			cheat, ok := a.cheats[cheat]
+			if !ok {
+				a.listCheats()
+				break
+			}
+
+			fmt.Fprintln(a.usageWriter, cheat)
+		}
+
 		a.terminate(0)
+
 		return nil
 	})
-	a.CheatCommand.Arg("command", "Command to show cheats for").StringsVar(&commands)
+
+	a.CheatCommand.Arg("label", "The cheat to show").StringVar(&cheat)
 	a.CheatCommand.Flag("list", "List available cheats").BoolVar(&list)
+	a.CheatCommand.Flag("save", "Saves the cheats to the given directory").PlaceHolder("DIRECTORY").StringVar(&dir)
 
 	return a
 }
 
-// Cheat sets the cheat text to associate with this application
-func (a *Application) Cheat(cheat string) *Application {
-	a.cheat = cheat
+// Cheat sets the cheat help text to associate with this application,
+// the cheat is the name it will be surfaced as in help, if empty its the
+// name of the application.
+func (a *Application) Cheat(cheat string, help string) *Application {
+	if help == "" {
+		return a
+	}
+
+	if cheat == "" {
+		cheat = a.Name
+	}
+
+	a.cheats[cheat] = help
+
 	if a.CheatCommand == nil {
 		a.WithCheat()
 	}
@@ -739,23 +838,6 @@ func (a *Application) completionOptions(context *ParseContext) []string {
 func (a *Application) generateBashCompletion(context *ParseContext) {
 	options := a.completionOptions(context)
 	fmt.Printf("%s", strings.Join(options, "\n"))
-}
-
-func (a *Application) cheatList() []string {
-	cheats := []string{}
-	if a.cheat != "" {
-		cheats = append(cheats, a.Name)
-	}
-
-	for _, cmd := range a.commands {
-		for _, c := range cmd.cheatCommands() {
-			cheats = append(cheats, fmt.Sprintf("%s/%s", a.Name, c))
-		}
-	}
-
-	sort.Strings(cheats)
-
-	return cheats
 }
 
 func envarTransform(name string) string {
