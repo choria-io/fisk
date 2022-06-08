@@ -338,11 +338,11 @@ func (a *Application) saveCheats(dir string) error {
 	return nil
 }
 
-// WithCheat enables support for rendering cheat compatible output,
+// WithCheats enables support for rendering cheat compatible output,
 // tags can be supplied which would be set when saving cheat files
 //
 // See https://github.com/cheat/cheat for information about this format
-func (a *Application) WithCheat(tags ...string) *Application {
+func (a *Application) WithCheats(tags ...string) *Application {
 	if len(tags) > 0 {
 		a.cheatTags = tags
 	}
@@ -362,9 +362,20 @@ func (a *Application) WithCheat(tags ...string) *Application {
 			a.listCheats()
 
 		default:
-			if cheat == "" {
+			if len(a.cheats) == 0 {
 				a.listCheats()
 				break
+			}
+
+			if cheat == "" {
+				if len(a.cheats) > 1 {
+					a.listCheats()
+					break
+				} else {
+					for k := range a.cheats {
+						cheat = k
+					}
+				}
 			}
 
 			cheat, ok := a.cheats[cheat]
@@ -403,7 +414,7 @@ func (a *Application) Cheat(cheat string, help string) *Application {
 	a.cheats[cheat] = help
 
 	if a.CheatCommand == nil {
-		a.WithCheat()
+		a.WithCheats()
 	}
 
 	return a
