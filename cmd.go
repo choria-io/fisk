@@ -284,6 +284,11 @@ func (c *CmdClause) FullCommand() string {
 	return strings.Join(out, " ")
 }
 
+// Commandf adds a new sub-command with printf parsing of help
+func (c *CmdClause) Commandf(name string, format string, a ...interface{}) *CmdClause {
+	return c.Command(name, fmt.Sprintf(format, a...))
+}
+
 // Command adds a new sub-command.
 func (c *CmdClause) Command(name, help string) *CmdClause {
 	cmd := c.addCommand(name, help)

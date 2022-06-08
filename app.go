@@ -54,6 +54,11 @@ type Application struct {
 	CheatCommand *CmdClause
 }
 
+// Newf creates a new application with printf parsing of the help
+func Newf(name string, format string, a ...interface{}) *Application {
+	return New(name, fmt.Sprintf(format, a...))
+}
+
 // New creates a new Fisk application instance.
 func New(name, help string) *Application {
 	a := &Application{
@@ -353,7 +358,7 @@ func (a *Application) WithCheats(tags ...string) *Application {
 		dir   string
 	)
 
-	a.CheatCommand = a.Command("cheat", "Shows cheats for commands").Action(func(pc *ParseContext) error {
+	a.CheatCommand = a.Command("cheat", fmt.Sprintf("Shows cheats for %s", a.Name)).Action(func(pc *ParseContext) error {
 		switch {
 		case dir != "":
 			return a.saveCheats(dir)
@@ -391,7 +396,10 @@ func (a *Application) WithCheats(tags ...string) *Application {
 
 		return nil
 	})
+	a.CheatCommand.HelpLong(`These cheats are compatible with the 'cheat' CLI tool
+and by saving the output using --save these cheats become accessible within that application.
 
+See https://github.com/cheat/cheat for more details`)
 	a.CheatCommand.Arg("label", "The cheat to show").StringVar(&cheat)
 	a.CheatCommand.Flag("list", "List available cheats").BoolVar(&list)
 	a.CheatCommand.Flag("save", "Saves the cheats to the given directory").PlaceHolder("DIRECTORY").StringVar(&dir)
@@ -452,6 +460,11 @@ func (a *Application) Action(action Action) *Application {
 func (a *Application) PreAction(action Action) *Application {
 	a.addPreAction(action)
 	return a
+}
+
+// Commandf adds a new top-level command with printf parsing of help
+func (a *Application) Commandf(name string, format string, arg ...interface{}) *CmdClause {
+	return a.Command(name, fmt.Sprintf(format, arg...))
 }
 
 // Command adds a new top-level command.

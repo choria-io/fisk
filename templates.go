@@ -47,7 +47,7 @@ var ShorterMainUsageTemplate = `{{define "FormatCommand"}}\
 
 {{if .Context.SelectedCommand}}\
 usage: {{.App.Name}} {{.Context.SelectedCommand}}{{template "FormatUsage" .Context.SelectedCommand}}
-{{if .Context.SelectedCommand.HelpLong}}{{.Context.SelectedCommand.HelpLong}}
+{{if .Context.SelectedCommand.HelpLong}}{{.Context.SelectedCommand.HelpLong|Wrap 0}}
 {{end}}
 {{else}}\
 usage: {{.App.Name}}{{template "FormatUsage" .App}}
