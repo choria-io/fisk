@@ -2,6 +2,7 @@ package fisk
 
 import (
 	"bytes"
+	"embed"
 	"errors"
 	"io/ioutil"
 	"os"
@@ -575,4 +576,14 @@ func TestCommandf(t *testing.T) {
 	y := x.Commandf("y", "foo bar %s", "baz")
 	assert.Equal(t, x.help, "foo bar")
 	assert.Equal(t, y.help, "foo bar baz")
+}
+
+//go:embed doc.go
+var docFS embed.FS
+
+func TestCheatFile(t *testing.T) {
+	c := newTestApp().CheatFile(docFS, "", "doc.go")
+	c.Command("x", "x").CheatFile(docFS, "y", "doc.go")
+	assert.Contains(t, c.cheats["test"], "Package fisk provides")
+	assert.Contains(t, c.cheats["y"], "Package fisk provides")
 }
