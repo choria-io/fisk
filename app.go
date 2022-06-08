@@ -353,7 +353,7 @@ func (a *Application) WithCheats(tags ...string) *Application {
 		dir   string
 	)
 
-	a.CheatCommand = a.Command("cheat", "Shows cheats for commands").PreAction(func(pc *ParseContext) error {
+	a.CheatCommand = a.Command("cheat", "Shows cheats for commands").Action(func(pc *ParseContext) error {
 		switch {
 		case dir != "":
 			return a.saveCheats(dir)
