@@ -71,38 +71,6 @@ Commands:
 {{end}}\
 `
 
-// CheatTemplate renders cheat format help for an app
-var CheatTemplate = `{{if .Context.SelectedCommand }}\
-{{if .Context.SelectedCommand.Cheat }}\
-{{ .Context.SelectedCommand.Cheat }}
-{{else}}\
-{{if gt (CheatCommands | Count) 0}}\
-Available Cheats:
-
-{{ range CheatCommands }}\
-   {{.}}
-{{end}}\
-{{else}}\
-No cheats defined
-{{end}}\
-{{end}}\
-{{else}}\
-{{ if .App.Cheat }}\
-{{.App.Cheat}}
-{{else}}\
-{{if gt (CheatCommands | Count) 0}}\
-Available Cheats:
-
-{{ range CheatCommands }}\
-   {{.}}
-{{end}}\
-{{else}}\
-No cheats defined
-{{end}}\
-{{end}}\
-{{end}}\
-`
-
 // KingpinDefaultUsageTemplate is the default usage template as used by kingpin
 var KingpinDefaultUsageTemplate = `{{define "FormatCommand"}}\
 {{if .FlagSummary}} {{.FlagSummary}}{{end}}\

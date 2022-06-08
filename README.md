@@ -31,7 +31,7 @@ Some historical points in time are kept:
 
 I really like [cheat](https://github.com/cheat/cheat), a great little tool that gives access to bite-sized hints on what's great about a CLI tool.
 
-Fisk supports cheats natively, you can get cheat formatted hints right from the app with no extra dependencies or export cheats into the `cheat` app for use via its interface and integrations.
+Since `v0.2.0` Fisk supports cheats natively, you can get cheat formatted hints right from the app with no extra dependencies or export cheats into the `cheat` app for use via its interface and integrations.
 
 ```nohighlight
 $ nats cheat pub
@@ -39,16 +39,28 @@ $ nats cheat pub
 nats pub destination.subject "{{ Random 100 1000 }}" -H Count:{{ Count }} --count 100
 ```
 
+Cheats are stored in a `map[string]string`, meaning it's flat, does not support subs and when saving cheats, due to the
+nature of the fluent api, 2 cheats with the same name will overwrite each other.
+
+I therefore suggest you place your cheat in the top command for an intro and then place them where you need them in the 
+first sub command only not deeper, this makes it easy to avoid clashes and easy for your users to discover them.
+
 Let's look how that is done:
 
 ```go
 // WithCheats() enables cheats without adding any to the top, you
 // can also just call Cheat() at the top to both set a cheat and enable it
 // once enabled at the top all cheats in all sub commands are accessible
-nats := fisk.New("nats", "NATS Utility").WithCheats()
+//
+// Cheats can have multiple tags, here we set the tags "middleware", and "nats"
+// that will be used when saving the cheats.  If no tags are supplied the
+// application name is used as the only tag
+nats := fisk.New("nats", "NATS Utility").WithCheats("middleware", "nats")
 
 pub := nats.Command("pub", "Publish utility")
-pub.Cheat(`# To publish 100 messages with a random.....`)
+// The cheat will be available as "pub", the if the first argument
+// is empty the name of the command will be used
+pub.Cheat("pub", `# To publish 100 messages with a random.....`)
 ```
 
 After that your app will have a new command `cheat` that gives access to the cheats. It will show
@@ -58,5 +70,8 @@ a list of cheats when trying to access a command without cheats or when running 
 $ nats cheat unknown
 Available Cheats:
 
-  nats/pub
+  pub
 ```
+
+You can save your cheats to a directory of your choice with `nats cheat --save /some/dir`, the directory
+must not already exist.
