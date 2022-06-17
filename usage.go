@@ -77,9 +77,11 @@ func formatCmdUsage(app *ApplicationModel, cmd *CmdModel) string {
 func formatFlag(haveShort bool, flag *FlagModel) string {
 	flagString := ""
 	flagName := flag.Name
-	if flag.IsBoolFlag() && flag.Name != "help" && flag.Name != "version" {
+
+	if flag.IsNegatable() && flag.Name != "help" && flag.Name != "version" {
 		flagName = "[no-]" + flagName
 	}
+
 	if flag.Short != 0 {
 		flagString += fmt.Sprintf("-%c, --%s", flag.Short, flagName)
 	} else {

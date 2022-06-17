@@ -54,6 +54,49 @@ func (p *parserMixin) BoolListVar(target *[]bool) {
 	}))
 }
 
+// -- bool Value
+type unNegatableBoolValue struct{ v *bool }
+
+func newUnNegatableBoolValue(p *bool) *unNegatableBoolValue {
+	return &unNegatableBoolValue{p}
+}
+
+func (f *unNegatableBoolValue) Set(s string) error {
+	v, err := strconv.ParseBool(s)
+	if err == nil {
+		*f.v = (bool)(v)
+	}
+	return err
+}
+
+func (f *unNegatableBoolValue) Get() interface{} { return (bool)(*f.v) }
+
+func (f *unNegatableBoolValue) String() string { return fmt.Sprintf("%v", *f.v) }
+
+// UnNegatableBool parses the next command-line value as bool.
+func (p *parserMixin) UnNegatableBool() (target *bool) {
+	target = new(bool)
+	p.UnNegatableBoolVar(target)
+	return
+}
+
+func (p *parserMixin) UnNegatableBoolVar(target *bool) {
+	p.SetValue(newUnNegatableBoolValue(target))
+}
+
+// UnNegatableBoolList accumulates bool values into a slice.
+func (p *parserMixin) UnNegatableBoolList() (target *[]bool) {
+	target = new([]bool)
+	p.UnNegatableBoolListVar(target)
+	return
+}
+
+func (p *parserMixin) UnNegatableBoolListVar(target *[]bool) {
+	p.SetValue(newAccumulator(target, func(v interface{}) Value {
+		return newUnNegatableBoolValue(v.(*bool))
+	}))
+}
+
 // -- string Value
 type stringValue struct{ v *string }
 

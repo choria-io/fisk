@@ -1,5 +1,6 @@
 [
   {"type": "bool", "parser": "strconv.ParseBool(s)"},
+  {"name": "UnNegatableBool", "type": "bool", "parser": "strconv.ParseBool(s)"},
   {"type": "string", "parser": "s, error(nil)", "format": "string(*f.v)", "plural": "Strings"},
   {"type": "uint", "parser": "strconv.ParseUint(s, 0, 64)", "plural": "Uints"},
   {"type": "uint8", "parser": "strconv.ParseUint(s, 0, 8)"},

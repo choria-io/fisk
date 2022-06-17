@@ -1,6 +1,7 @@
 package fisk
 
 import (
+	"bytes"
 	"io/ioutil"
 	"os"
 	"testing"
@@ -388,4 +389,46 @@ func TestIsSetByUser(t *testing.T) {
 	assert.Error(t, err)
 	assert.True(t, isSet)
 	assert.False(t, isSet2)
+}
+
+func TestNegatableBool(t *testing.T) {
+	app := newTestApp()
+	boolFlag := app.Flag("neg", "").Bool()
+	unNegBoolFlag := app.Flag("unneg", "").UnNegatableBool()
+
+	_, err := app.Parse([]string{})
+	assert.NoError(t, err)
+	assert.False(t, *unNegBoolFlag)
+	assert.False(t, *boolFlag)
+
+	_, err = app.Parse([]string{"--neg"})
+	assert.NoError(t, err)
+	assert.True(t, *boolFlag)
+	assert.False(t, *unNegBoolFlag)
+
+	_, err = app.Parse([]string{"--no-neg"})
+	assert.NoError(t, err)
+	assert.False(t, *boolFlag)
+	assert.False(t, *unNegBoolFlag)
+
+	_, err = app.Parse([]string{"--unneg"})
+	assert.NoError(t, err)
+	assert.False(t, *boolFlag)
+	assert.True(t, *unNegBoolFlag)
+
+	_, err = app.Parse([]string{"--no-unneg"})
+	assert.Error(t, err, "unknown long flag '--no-unneg'")
+}
+
+func TestHelpForBoolFlags(t *testing.T) {
+	app := newTestApp()
+	app.Flag("yes", "").Default("true").Bool()
+	app.Flag("no", "").Default("false").Bool()
+	app.Flag("nonneg", "").UnNegatableBool()
+
+	w := bytes.NewBuffer(nil)
+	app.Writer(w).Usage(nil)
+	assert.Contains(t, w.String(), "--[no-]yes")
+	assert.Contains(t, w.String(), "--[no-]no")
+	assert.Contains(t, w.String(), "--nonneg")
 }

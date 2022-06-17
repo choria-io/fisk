@@ -27,12 +27,21 @@ Some historical points in time are kept:
  * Changes to make `staticcheck` happy
  * A new default template that shortens the help on large apps, old default preserved as `KingpinDefaultUsageTemplate`
  * Integration with [cheat](https://github.com/cheat/cheat) (see [below](#cheats))
+ * Unnegatable booleans using a new `UnNegatableBool()` flag type, backwards compatibility kept
+
+## UnNegatableBool
+
+Fisk will add to all `Bool()` kind flags a negated version, in other words `--force` will also get `--no-force` added
+and the usage will show these negatable booleans.
+
+Often though one does not want to have the negatable version of a boolean added, with fisk you can achieve this using
+our `UnNegatableBool()` which would just be the basic boolean flag with no negatable version.
 
 ## Cheats
 
 I really like [cheat](https://github.com/cheat/cheat), a great little tool that gives access to bite-sized hints on what's great about a CLI tool.
 
-Since `v0.2.0` Fisk supports cheats natively, you can get cheat formatted hints right from the app with no extra dependencies or export cheats into the `cheat` app for use via its interface and integrations.
+Since `v0.1.1` Fisk supports cheats natively, you can get cheat formatted hints right from the app with no extra dependencies or export cheats into the `cheat` app for use via its interface and integrations.
 
 ```nohighlight
 $ nats cheat pub

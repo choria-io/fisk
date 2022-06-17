@@ -128,6 +128,24 @@ func (a *accumulator) IsCumulative() bool {
 	return true
 }
 
+// BoolFlag is an optional interface to specify that a flag is a boolean flag.
+type BoolFlag interface {
+	// BoolFlagIsNegatable Specify if the flag is negatable (ie. supports both --no-<name> and --name).
+	BoolFlagIsNegatable() bool
+}
+
+func isBoolFlag(f Value) bool {
+	if bf, ok := f.(boolFlag); ok {
+		return bf.IsBoolFlag()
+	}
+	_, ok := f.(BoolFlag)
+	return ok
+}
+
+func (b *boolValue) BoolFlagIsNegatable() bool { return true }
+
+func (n *unNegatableBoolValue) BoolFlagIsNegatable() bool { return false }
+
 func (b *boolValue) IsBoolFlag() bool { return true }
 
 // -- time.Duration Value

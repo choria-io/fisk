@@ -34,10 +34,12 @@ func (f *FlagGroupModel) FlagSummary() string {
 		}
 
 		if flag.Required {
-			if flag.IsBoolFlag() && flag.Name != "help" && flag.Name != "version" {
-				out = append(out, fmt.Sprintf("--[no-]%s", flag.Name))
-			} else {
-				out = append(out, fmt.Sprintf("--%s=%s", flag.Name, flag.FormatPlaceHolder()))
+			if flag.IsBoolFlag() {
+				if flag.IsNegatable() && flag.Name != "help" && flag.Name != "version" {
+					out = append(out, fmt.Sprintf("--[no-]%s", flag.Name))
+				} else {
+					out = append(out, fmt.Sprintf("--%s=%s", flag.Name, flag.FormatPlaceHolder()))
+				}
 			}
 		}
 	}
@@ -67,10 +69,12 @@ func (f *FlagModel) String() string {
 }
 
 func (f *FlagModel) IsBoolFlag() bool {
-	if fl, ok := f.Value.(boolFlag); ok {
-		return fl.IsBoolFlag()
-	}
-	return false
+	return isBoolFlag(f.Value)
+}
+
+func (f *FlagModel) IsNegatable() bool {
+	bf, ok := f.Value.(BoolFlag)
+	return ok && bf.BoolFlagIsNegatable()
 }
 
 func (f *FlagModel) FormatPlaceHolder() string {
