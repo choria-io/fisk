@@ -77,13 +77,13 @@ func New(name, help string) *Application {
 	a.argGroup = newArgGroup()
 	a.cmdGroup = newCmdGroup(a)
 	a.HelpFlag = a.Flag("help", "Show context-sensitive help")
-	a.HelpFlag.Bool()
+	a.HelpFlag.UnNegatableBool()
 
-	a.Flag("help-long", "Generate long help.").Hidden().PreAction(a.generateLongHelp).Bool()
-	a.Flag("help-man", "Generate a man page.").Hidden().PreAction(a.generateManPage).Bool()
-	a.Flag("completion-bash", "Output possible completions for the given args.").Hidden().BoolVar(&a.completion)
-	a.Flag("completion-script-bash", "Generate completion script for bash.").Hidden().PreAction(a.generateBashCompletionScript).Bool()
-	a.Flag("completion-script-zsh", "Generate completion script for ZSH.").Hidden().PreAction(a.generateZSHCompletionScript).Bool()
+	a.Flag("help-long", "Generate long help.").Hidden().PreAction(a.generateLongHelp).UnNegatableBool()
+	a.Flag("help-man", "Generate a man page.").Hidden().PreAction(a.generateManPage).UnNegatableBool()
+	a.Flag("completion-bash", "Output possible completions for the given args.").Hidden().UnNegatableBoolVar(&a.completion)
+	a.Flag("completion-script-bash", "Generate completion script for bash.").Hidden().PreAction(a.generateBashCompletionScript).UnNegatableBool()
+	a.Flag("completion-script-zsh", "Generate completion script for ZSH.").Hidden().PreAction(a.generateZSHCompletionScript).UnNegatableBool()
 
 	return a
 }
@@ -402,7 +402,7 @@ and by saving the output using --save these cheats become accessible within that
 
 See https://github.com/cheat/cheat for more details`)
 	a.CheatCommand.Arg("label", "The cheat to show").StringVar(&cheat)
-	a.CheatCommand.Flag("list", "List available cheats").BoolVar(&list)
+	a.CheatCommand.Flag("list", "List available cheats").UnNegatableBoolVar(&list)
 	a.CheatCommand.Flag("save", "Saves the cheats to the given directory").PlaceHolder("DIRECTORY").StringVar(&dir)
 
 	return a
@@ -445,7 +445,7 @@ func (a *Application) Version(version string) *Application {
 		a.terminate(0)
 		return nil
 	})
-	a.VersionFlag.Bool()
+	a.VersionFlag.UnNegatableBool()
 	return a
 }
 

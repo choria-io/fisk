@@ -156,7 +156,7 @@ func newDurationValue(p *time.Duration) *durationValue {
 }
 
 func (d *durationValue) Set(s string) error {
-	v, err := time.ParseDuration(s)
+	v, err := ParseDuration(s)
 	*d = durationValue(v)
 	return err
 }
