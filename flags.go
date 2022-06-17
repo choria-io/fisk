@@ -94,8 +94,12 @@ loop:
 					if strings.HasPrefix(name, "no-") {
 						name = name[3:]
 						invert = true
+						flag, ok = f.long[name]
+						if ok {
+							bf, bok := flag.value.(BoolFlag)
+							ok = bok && bf.BoolFlagIsNegatable()
+						}
 					}
-					flag, ok = f.long[name]
 				}
 				if !ok {
 					return nil, fmt.Errorf("unknown long flag '%s'", flagToken)
@@ -111,8 +115,7 @@ loop:
 
 			flag.isSetByUser()
 
-			fb, ok := flag.value.(boolFlag)
-			if ok && fb.IsBoolFlag() {
+			if isBoolFlag(flag.value) {
 				if invert {
 					defaultValue = "false"
 				} else {
