@@ -78,7 +78,7 @@ func formatFlag(haveShort bool, flag *FlagModel) string {
 	flagString := ""
 	flagName := flag.Name
 
-	if flag.IsNegatable() && flag.Name != "help" && flag.Name != "version" {
+	if flag.IsNegatable() {
 		flagName = "[no-]" + flagName
 	}
 

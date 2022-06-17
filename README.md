@@ -28,8 +28,9 @@ Some historical points in time are kept:
  * A new default template that shortens the help on large apps, old default preserved as `KingpinDefaultUsageTemplate`
  * Integration with [cheat](https://github.com/cheat/cheat) (see [below](#cheats))
  * Unnegatable booleans using a new `UnNegatableBool()` flag type, backwards compatibility kept
+ * Extended parsing for durations that include weeks (`w`, `W`), months (`M`), years (`y`, `Y`) and days (`d`, `D`) units
 
-## UnNegatableBool
+### UnNegatableBool
 
 Fisk will add to all `Bool()` kind flags a negated version, in other words `--force` will also get `--no-force` added
 and the usage will show these negatable booleans.
@@ -37,7 +38,7 @@ and the usage will show these negatable booleans.
 Often though one does not want to have the negatable version of a boolean added, with fisk you can achieve this using
 our `UnNegatableBool()` which would just be the basic boolean flag with no negatable version.
 
-## Cheats
+### Cheats
 
 I really like [cheat](https://github.com/cheat/cheat), a great little tool that gives access to bite-sized hints on what's great about a CLI tool.
 
