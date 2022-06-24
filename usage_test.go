@@ -117,6 +117,7 @@ func TestShortMainUSage(t *testing.T) {
 
 	a.Parse([]string{"--help"})
 	assert.NotContains(t, buf.String(), "long help")
+	assert.NotContains(t, buf.String(), "Flags:")
 
 	buf.Reset()
 	a.Parse([]string{"sub", "--help"})

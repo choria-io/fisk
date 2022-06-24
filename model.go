@@ -28,7 +28,6 @@ func (f *FlagGroupModel) FlagSummary() string {
 	count := 0
 
 	for _, flag := range f.Flags {
-
 		if !ignoreInCount[flag.Name] {
 			count++
 		}
@@ -43,9 +42,11 @@ func (f *FlagGroupModel) FlagSummary() string {
 			}
 		}
 	}
+
 	if count != len(out) {
 		out = append(out, "[<flags>]")
 	}
+
 	return strings.Join(out, " ")
 }
 
@@ -245,7 +246,7 @@ func (f *FlagClause) Model() *FlagModel {
 	return &FlagModel{
 		Name:        f.name,
 		Help:        f.help,
-		Short:       rune(f.shorthand),
+		Short:       f.shorthand,
 		Default:     f.defaultValues,
 		Envar:       f.envar,
 		PlaceHolder: f.placeholder,
