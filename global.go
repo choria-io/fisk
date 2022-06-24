@@ -77,7 +77,7 @@ func Usage() {
 	CommandLine.Usage(os.Args[1:])
 }
 
-// Set global usage template to use (defaults to KingpinDefaultUsageTemplate).
+// UsageTemplate Set global usage template to use (defaults to ShorterMainUsageTemplate).
 func UsageTemplate(template string) *Application {
 	return CommandLine.UsageTemplate(template)
 }
