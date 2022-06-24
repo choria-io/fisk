@@ -53,7 +53,7 @@ usage: {{.App.Name}} {{.Context.SelectedCommand}}{{template "FormatUsage" .Conte
 usage: {{.App.Name}}{{template "FormatUsage" .App}}
 {{end}}\
 {{if .Context.SelectedCommand}}\
-{{if .Context.Flags}}\
+{{if .Context.Flags|VisibleFlags}}\
 Flags:
 {{.Context.Flags|FlagsToTwoColumns|FormatTwoColumns}}
 {{end}}\
@@ -99,7 +99,7 @@ usage: {{.App.Name}} {{.Context.SelectedCommand}}{{template "FormatUsage" .Conte
 {{else}}\
 usage: {{.App.Name}}{{template "FormatUsage" .App}}
 {{end}}\
-{{if .Context.Flags}}\
+{{if .Context.Flags|VisibleFlags}}\
 Flags:
 {{.Context.Flags|FlagsToTwoColumns|FormatTwoColumns}}
 {{end}}\
@@ -197,7 +197,7 @@ usage: {{.App.Name}} {{.Context.SelectedCommand}}{{template "FormatUsage" .Conte
 {{else}}\
 usage: {{.App.Name}}{{template "FormatUsage" .App}}
 {{end}}\
-{{if .Context.Flags}}\
+{{if .Context.Flags|VisibleFlags}}\
 Flags:
 {{.Context.Flags|FlagsToTwoColumns|FormatTwoColumns}}
 {{end}}\
@@ -290,7 +290,7 @@ var LongHelpTemplate = `{{define "FormatCommand"}}\
 {{end}}\
 
 usage: {{.App.Name}}{{template "FormatUsage" .App}}
-{{if .Context.Flags}}\
+{{if .Context.Flags|VisibleFlags}}\
 Flags:
 {{.Context.Flags|FlagsToTwoColumns|FormatTwoColumns}}
 {{end}}\

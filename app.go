@@ -80,12 +80,22 @@ func New(name, help string) *Application {
 	a.HelpFlag.UnNegatableBool()
 
 	a.Flag("help-long", "Generate long help.").Hidden().PreAction(a.generateLongHelp).UnNegatableBool()
+	a.Flag("help-compact", "Generate compact help.").Hidden().PreAction(a.generateCompactHelp).UnNegatableBool()
 	a.Flag("help-man", "Generate a man page.").Hidden().PreAction(a.generateManPage).UnNegatableBool()
 	a.Flag("completion-bash", "Output possible completions for the given args.").Hidden().UnNegatableBoolVar(&a.completion)
 	a.Flag("completion-script-bash", "Generate completion script for bash.").Hidden().PreAction(a.generateBashCompletionScript).UnNegatableBool()
 	a.Flag("completion-script-zsh", "Generate completion script for ZSH.").Hidden().PreAction(a.generateZSHCompletionScript).UnNegatableBool()
 
 	return a
+}
+
+func (a *Application) generateCompactHelp(c *ParseContext) error {
+	a.Writer(os.Stdout)
+	if err := a.UsageForContextWithTemplate(c, 2, CompactUsageTemplate); err != nil {
+		return err
+	}
+	a.terminate(0)
+	return nil
 }
 
 func (a *Application) generateLongHelp(c *ParseContext) error {

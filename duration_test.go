@@ -19,14 +19,15 @@ func TestDurationParser(t *testing.T) {
 		{"1M", 24 * 30 * time.Hour, nil},
 		{"1Y1M", (365 * 24 * time.Hour) + (24 * 30 * time.Hour), nil},
 		{"1xX", 0, fmt.Errorf("%w: invalid unit xX", errInvalidDuration)},
+		{"-1", 0, fmt.Errorf("invalid duration")},
 	}
 
 	for _, c := range cases {
 		d, err := ParseDuration(c.s)
 		if c.err == nil {
-			assert.NoError(t, err)
+			assert.NoError(t, err, c.s)
 		} else {
-			assert.Error(t, err, c.err)
+			assert.ErrorContains(t, err, c.err.Error(), c.s)
 		}
 		assert.Equal(t, c.d, d, c.s)
 	}

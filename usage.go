@@ -132,6 +132,16 @@ func (a *Application) UsageForContextWithTemplate(context *ParseContext, indent 
 			return buf.String()
 		},
 		"FormatFlag": formatFlag,
+		"VisibleFlags": func(flags []*FlagModel) []*FlagModel {
+			var vis []*FlagModel
+			for _, flag := range flags {
+				if !flag.Hidden {
+					vis = append(vis, flag)
+				}
+			}
+
+			return vis
+		},
 		"FlagsToTwoColumns": func(f []*FlagModel) [][2]string {
 			rows := [][2]string{}
 			haveShort := false
@@ -158,7 +168,8 @@ func (a *Application) UsageForContextWithTemplate(context *ParseContext, indent 
 			return requiredFlags
 		},
 		"OptionalFlags": func(f []*FlagModel) []*FlagModel {
-			optionalFlags := []*FlagModel{}
+			var optionalFlags []*FlagModel
+
 			for _, flag := range f {
 				if !flag.Required {
 					optionalFlags = append(optionalFlags, flag)

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"regexp"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -33,6 +34,8 @@ func ParseDuration(d string) (time.Duration, error) {
 		r   time.Duration
 		neg = 1
 	)
+
+	d = strings.TrimSpace(d)
 
 	if len(d) == 0 {
 		return r, errInvalidDuration
