@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"embed"
 	"errors"
+	"fmt"
 	"io/ioutil"
 	"os"
 	"sort"
@@ -586,4 +587,24 @@ func TestCheatFile(t *testing.T) {
 	c.Command("x", "x").CheatFile(docFS, "y", "doc.go")
 	assert.Contains(t, c.cheats["test"], "Package fisk provides")
 	assert.Contains(t, c.cheats["y"], "Package fisk provides")
+}
+
+func TestParseWithUsage(t *testing.T) {
+	var buf bytes.Buffer
+	c := newTestApp()
+	c.usageWriter = &buf
+	c.errorWriter = &buf
+
+	p := c.Command("parent", "")
+	ch := p.Command("child", "").Action(func(_ *ParseContext) error { return fmt.Errorf("not impl") })
+	ch.Flag("thing", "thing").Required().String()
+
+	c.MustParseWithUsage([]string{"parent"})
+	assert.Contains(t, buf.String(), "must select a subcommand")
+	assert.NotContains(t, buf.String(), "Flags")
+
+	c.MustParseWithUsage([]string{"parent", "child"})
+	assert.Contains(t, buf.String(), "required flag --thing not provided")
+	assert.Contains(t, buf.String(), "Flags")
+
 }

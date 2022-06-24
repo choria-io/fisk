@@ -1,6 +1,7 @@
 package fisk
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"io/fs"
@@ -14,6 +15,12 @@ import (
 
 var (
 	ErrCommandNotSpecified = fmt.Errorf("command not specified")
+	// ErrSubCommandRequired indicates that a command was invoked, but it required a sub command
+	ErrSubCommandRequired = errors.New("must select a subcommand")
+	// ErrRequiredArgument indicates a required argument was not given
+	ErrRequiredArgument = errors.New("required argument")
+	// ErrRequiredFlag indicates a required flag was not given
+	ErrRequiredFlag = errors.New("required flag")
 )
 
 var (
@@ -257,6 +264,7 @@ func (a *Application) Parse(args []string) (command string, err error) {
 			a.writeUsage(context, nil)
 		}
 	}
+
 	return command, err
 }
 
@@ -657,7 +665,7 @@ func (a *Application) validateRequired(context *ParseContext) error {
 		if flagElements[flag.name] == nil {
 			// Check required flags were provided.
 			if flag.needsValue() {
-				return fmt.Errorf("required flag --%s not provided", flag.name)
+				return fmt.Errorf("%w --%s not provided", ErrRequiredFlag, flag.name)
 			}
 		}
 	}
@@ -665,7 +673,7 @@ func (a *Application) validateRequired(context *ParseContext) error {
 	for _, arg := range context.arguments.args {
 		if argElements[arg.name] == nil {
 			if arg.needsValue() {
-				return fmt.Errorf("required argument '%s' not provided", arg.name)
+				return fmt.Errorf("%w '%s' not provided", ErrRequiredArgument, arg.name)
 			}
 		}
 	}
@@ -703,7 +711,7 @@ func (a *Application) setValues(context *ParseContext) (selected []string, err e
 	}
 
 	if lastCmd != nil && len(lastCmd.commands) > 0 {
-		return nil, fmt.Errorf("must select a subcommand of '%s'", lastCmd.FullCommand())
+		return nil, fmt.Errorf("%w of '%s'", ErrSubCommandRequired, lastCmd.FullCommand())
 	}
 
 	return
@@ -792,14 +800,42 @@ func (a *Application) FatalUsageContext(context *ParseContext, format string, ar
 // FatalIfError prints an error and exits if err is not nil. The error is printed
 // with the given formatted string, if any.
 func (a *Application) FatalIfError(err error, format string, args ...interface{}) {
-	if err != nil {
-		prefix := ""
-		if format != "" {
-			prefix = fmt.Sprintf(format, args...) + ": "
-		}
-		a.Errorf(prefix+"%s", err)
-		a.terminate(1)
+	if err == nil {
+		return
 	}
+
+	prefix := ""
+	if format != "" {
+		prefix = fmt.Sprintf(format, args...) + ": "
+	}
+	a.Errorf(prefix+"%s", err)
+	a.terminate(1)
+}
+
+func (a *Application) MustParseWithUsage(args []string) string {
+	cmd, err := a.Parse(args)
+	if err == nil {
+		return cmd
+	}
+
+	switch {
+	case errors.Is(err, ErrSubCommandRequired):
+		fmt.Fprintf(a.errorWriter, "%s: error: %v\n\n", a.Name, err)
+		pc, _ := a.parseContext(true, args)
+		a.UsageForContextWithTemplate(pc, 2, compactWithoutFlagsOrArgs)
+		a.terminate(1)
+
+	case errors.Is(err, ErrRequiredArgument) || errors.Is(err, ErrRequiredFlag):
+		fmt.Fprintf(a.errorWriter, "%s: error: %v\n\n", a.Name, err)
+		pc, _ := a.parseContext(true, args)
+		a.UsageForContextWithTemplate(pc, 2, a.usageTemplate)
+		a.terminate(1)
+
+	default:
+		a.Fatalf("%v", err)
+	}
+
+	return ""
 }
 
 func (a *Application) completionOptions(context *ParseContext) []string {
