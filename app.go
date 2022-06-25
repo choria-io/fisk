@@ -242,7 +242,7 @@ func (a *Application) Parse(args []string) (command string, err error) {
 
 		a.maybeHelp(context)
 		if !context.EOL() {
-			return "", fmt.Errorf("unexpected argument '%s'", context.Peek())
+			return "", fmt.Errorf("%w '%s'", ErrUnexpectedArgument, context.Peek())
 		}
 
 		if setValuesErr != nil {
@@ -809,7 +809,7 @@ func (a *Application) FatalIfError(err error, format string, args ...interface{}
 // user to quickly evaluate the next command to use, this is to assist in discovering
 // the layout and design of a CLI tool.
 //
-// When a required argument of flag is not supplied a error is shown followed by the
+// When a various argument of flag errors are encountered an error is shown followed by the
 // full help for that command showing available arguments and flags.
 //
 // All other errors just shows the error.
@@ -819,28 +819,27 @@ func (a *Application) MustParseWithUsage(args []string) (command string) {
 		return cmd
 	}
 
+	ut := a.usageTemplate
+
 	switch {
 	case errorIs(err, ErrSubCommandRequired):
-		fmt.Fprintf(a.errorWriter, "error: a subcommand is required, use --help for full help including flags and arguments\n\n")
-		pc, _ := a.parseContext(true, args)
-		a.UsageForContextWithTemplate(pc, 2, compactWithoutFlagsOrArgs)
-		a.terminate(1)
+		fmt.Fprintf(a.errorWriter, "error: a subcommand from the list below is required, use --help for full help including flags and arguments\n\n")
+		ut = compactWithoutFlagsOrArgs
 
 	case errorIs(err, ErrExpectedKnownCommand):
 		fmt.Fprintf(a.errorWriter, "error: %v, use --help for full help including flags and arguments\n\n", err)
-		pc, _ := a.parseContext(true, args)
-		a.UsageForContextWithTemplate(pc, 2, compactWithoutFlagsOrArgs)
-		a.terminate(1)
+		ut = compactWithoutFlagsOrArgs
 
-	case errorIs(err, ErrRequiredArgument, ErrRequiredFlag, ErrUnknownLongFlag, ErrUnknownShortFlag, ErrExpectedFlagArgument, ErrFlagCannotRepeat):
+	case errorIs(err, ErrRequiredArgument, ErrRequiredFlag, ErrUnknownLongFlag, ErrUnknownShortFlag, ErrExpectedFlagArgument, ErrFlagCannotRepeat, ErrUnexpectedArgument):
 		fmt.Fprintf(a.errorWriter, "error: %v\n\n", err)
-		pc, _ := a.parseContext(true, args)
-		a.UsageForContextWithTemplate(pc, 2, a.usageTemplate)
-		a.terminate(1)
 
 	default:
 		a.Fatalf("%v", err)
 	}
+
+	pc, _ := a.parseContext(true, args)
+	a.UsageForContextWithTemplate(pc, 2, ut)
+	a.terminate(1)
 
 	return ""
 }

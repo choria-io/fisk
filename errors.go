@@ -32,4 +32,7 @@ var (
 
 	// ErrFlagCannotRepeat indicates a flag cannot be passed multiple times to fill an array
 	ErrFlagCannotRepeat = errors.New("cannot be repeated")
+
+	// ErrUnexpectedArgument indicates an unexpected argument was encountered
+	ErrUnexpectedArgument = errors.New("unexpected argument")
 )
