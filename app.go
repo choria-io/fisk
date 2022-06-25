@@ -14,16 +14,6 @@ import (
 )
 
 var (
-	ErrCommandNotSpecified = fmt.Errorf("command not specified")
-	// ErrSubCommandRequired indicates that a command was invoked, but it required a sub command
-	ErrSubCommandRequired = errors.New("must select a subcommand")
-	// ErrRequiredArgument indicates a required argument was not given
-	ErrRequiredArgument = errors.New("required argument")
-	// ErrRequiredFlag indicates a required flag was not given
-	ErrRequiredFlag = errors.New("required flag")
-)
-
-var (
 	envarTransformRegexp = regexp.MustCompile(`[^a-zA-Z0-9_]+`)
 )
 
@@ -691,7 +681,7 @@ func (a *Application) setValues(context *ParseContext) (selected []string, err e
 		case *FlagClause:
 			if _, ok := flagSet[clause.name]; ok {
 				if v, ok := clause.value.(repeatableFlag); !ok || !v.IsCumulative() {
-					return nil, fmt.Errorf("flag '%s' cannot be repeated", clause.name)
+					return nil, fmt.Errorf("flag '%s' %w", clause.name, ErrFlagCannotRepeat)
 				}
 			}
 			if err = clause.value.Set(*element.Value); err != nil {
@@ -830,14 +820,20 @@ func (a *Application) MustParseWithUsage(args []string) (command string) {
 	}
 
 	switch {
-	case errors.Is(err, ErrSubCommandRequired):
-		fmt.Fprintf(a.errorWriter, "'%s' requires a subcommand from the list below, use --help for full help including flags and arguments\n\n", a.Name)
+	case errorIs(err, ErrSubCommandRequired):
+		fmt.Fprintf(a.errorWriter, "error: a subcommand is required, use --help for full help including flags and arguments\n\n")
 		pc, _ := a.parseContext(true, args)
 		a.UsageForContextWithTemplate(pc, 2, compactWithoutFlagsOrArgs)
 		a.terminate(1)
 
-	case errors.Is(err, ErrRequiredArgument) || errors.Is(err, ErrRequiredFlag):
-		fmt.Fprintf(a.errorWriter, "%s: error: %v\n\n", a.Name, err)
+	case errorIs(err, ErrExpectedKnownCommand):
+		fmt.Fprintf(a.errorWriter, "error: %v, use --help for full help including flags and arguments\n\n", err)
+		pc, _ := a.parseContext(true, args)
+		a.UsageForContextWithTemplate(pc, 2, compactWithoutFlagsOrArgs)
+		a.terminate(1)
+
+	case errorIs(err, ErrRequiredArgument, ErrRequiredFlag, ErrUnknownLongFlag, ErrUnknownShortFlag, ErrExpectedFlagArgument, ErrFlagCannotRepeat):
+		fmt.Fprintf(a.errorWriter, "error: %v\n\n", err)
 		pc, _ := a.parseContext(true, args)
 		a.UsageForContextWithTemplate(pc, 2, a.usageTemplate)
 		a.terminate(1)
@@ -932,4 +928,14 @@ func (a *Application) generateBashCompletion(context *ParseContext) {
 
 func envarTransform(name string) string {
 	return strings.ToUpper(envarTransformRegexp.ReplaceAllString(name, "_"))
+}
+
+func errorIs(err error, targets ...error) bool {
+	for _, t := range targets {
+		if errors.Is(err, t) {
+			return true
+		}
+	}
+
+	return false
 }

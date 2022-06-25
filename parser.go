@@ -268,7 +268,7 @@ func (p *ParseContext) matchedCmd(cmd *CmdClause) {
 	p.SelectedCommand = cmd
 }
 
-// Expand arguments from a file. Lines starting with # will be treated as comments.
+// ExpandArgsFromFile expand arguments from a file. Lines starting with # will be treated as comments.
 func ExpandArgsFromFile(filename string) (out []string, err error) {
 	if filename == "" {
 		return nil, fmt.Errorf("expected @ file to expand arguments from")
@@ -332,7 +332,7 @@ loop:
 						}
 					}
 					if cmd == nil {
-						return fmt.Errorf("expected command but got %q", token)
+						return fmt.Errorf("%w but got %q", ErrExpectedKnownCommand, token)
 					}
 				}
 				if cmd == HelpCommand {
