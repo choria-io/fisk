@@ -298,7 +298,7 @@ func (a *Application) listCheats() {
 		return
 	}
 
-	list := []string{}
+	var list []string
 	top := ""
 	for k := range a.cheats {
 		if k == a.Name {
@@ -334,7 +334,7 @@ func (a *Application) saveCheats(dir string) error {
 		tags = []string{a.Name}
 	}
 
-	list := []string{}
+	var list []string
 	for k := range a.cheats {
 		list = append(list, k)
 	}
@@ -812,7 +812,18 @@ func (a *Application) FatalIfError(err error, format string, args ...interface{}
 	a.terminate(1)
 }
 
-func (a *Application) MustParseWithUsage(args []string) string {
+// MustParseWithUsage parses args using Parse() and shows usage on certain errors
+//
+// When a parent command with no action is called a compact usage will be shown
+// listing the subcommands available without any flags or arguments allowing a
+// user to quickly evaluate the next command to use, this is to assist in discovering
+// the layout and design of a CLI tool.
+//
+// When a required argument of flag is not supplied a error is shown followed by the
+// full help for that command showing available arguments and flags.
+//
+// All other errors just shows the error.
+func (a *Application) MustParseWithUsage(args []string) (command string) {
 	cmd, err := a.Parse(args)
 	if err == nil {
 		return cmd
@@ -820,7 +831,7 @@ func (a *Application) MustParseWithUsage(args []string) string {
 
 	switch {
 	case errors.Is(err, ErrSubCommandRequired):
-		fmt.Fprintf(a.errorWriter, "%s: error: %v\n\n", a.Name, err)
+		fmt.Fprintf(a.errorWriter, "'%s' requires a subcommand from the list below, use --help for full help including flags and arguments\n\n", a.Name)
 		pc, _ := a.parseContext(true, args)
 		a.UsageForContextWithTemplate(pc, 2, compactWithoutFlagsOrArgs)
 		a.terminate(1)
@@ -900,7 +911,7 @@ func (a *Application) completionOptions(context *ParseContext) []string {
 			}
 
 			if topFlagMatched {
-				// Top level had a flag which matched the input. Return it's options.
+				// Top level had a flag which matched the input. Return its options.
 				options = topOptions
 			} else {
 				// Add top level flags
