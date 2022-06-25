@@ -600,7 +600,7 @@ func TestParseWithUsage(t *testing.T) {
 	ch.Flag("thing", "thing").Required().String()
 
 	c.MustParseWithUsage([]string{"parent"})
-	assert.Contains(t, buf.String(), "a subcommand is required")
+	assert.Contains(t, buf.String(), " a subcommand from the list below is required")
 	assert.NotContains(t, buf.String(), "Flags")
 
 	buf.Reset()

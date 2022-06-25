@@ -380,7 +380,7 @@ loop:
 	}
 
 	if !context.EOL() {
-		return fmt.Errorf("unexpected %s", context.Peek())
+		return fmt.Errorf("%w %s", ErrUnexpectedArgument, context.Peek())
 	}
 
 	// Set defaults for all remaining args.

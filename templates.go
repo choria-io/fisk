@@ -231,19 +231,6 @@ var compactWithoutFlagsOrArgs = `{{define "FormatCommand"}}\
 {{end}}\
 {{end}}\
 
-{{define "FormatUsage"}}\
-{{template "FormatCommand" .}}{{if .Commands}} <command> [<args> ...]{{end}}
-{{if .Help}}
-{{.Help|Wrap 0}}\
-{{end}}\
-
-{{end}}\
-
-{{if .Context.SelectedCommand}}\
-usage: {{.App.Name}} {{.Context.SelectedCommand}}{{template "FormatUsage" .Context.SelectedCommand}}
-{{else}}\
-usage: {{.App.Name}}{{template "FormatUsage" .App}}
-{{end}}\
 {{if .Context.SelectedCommand}}\
 {{if .Context.SelectedCommand.Commands}}\
 Commands:
