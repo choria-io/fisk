@@ -102,12 +102,12 @@ loop:
 					}
 				}
 				if !ok {
-					return nil, fmt.Errorf("unknown long flag '%s'", flagToken)
+					return nil, fmt.Errorf("%w '%s'", ErrUnknownLongFlag, flagToken)
 				}
 			} else {
 				flag, ok = f.short[name]
 				if !ok {
-					return nil, fmt.Errorf("unknown short flag '%s'", flagToken)
+					return nil, fmt.Errorf("%w '%s'", ErrUnknownShortFlag, flagToken)
 				}
 			}
 
@@ -124,12 +124,12 @@ loop:
 			} else {
 				if invert {
 					context.Push(token)
-					return nil, fmt.Errorf("unknown long flag '%s'", flagToken)
+					return nil, fmt.Errorf("%w '%s'", ErrUnknownLongFlag, flagToken)
 				}
 				token = context.Peek()
 				if token.Type != TokenArg {
 					context.Push(token)
-					return nil, fmt.Errorf("expected argument for flag '%s'", flagToken)
+					return nil, fmt.Errorf("%w '%s'", ErrExpectedFlagArgument, flagToken)
 				}
 				context.Next()
 				defaultValue = token.Value

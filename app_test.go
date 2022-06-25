@@ -600,11 +600,36 @@ func TestParseWithUsage(t *testing.T) {
 	ch.Flag("thing", "thing").Required().String()
 
 	c.MustParseWithUsage([]string{"parent"})
-	assert.Contains(t, buf.String(), "requires a subcommand from")
+	assert.Contains(t, buf.String(), "a subcommand is required")
 	assert.NotContains(t, buf.String(), "Flags")
 
+	buf.Reset()
 	c.MustParseWithUsage([]string{"parent", "child"})
 	assert.Contains(t, buf.String(), "required flag --thing not provided")
 	assert.Contains(t, buf.String(), "Flags")
 
+	buf.Reset()
+	c.MustParseWithUsage([]string{"parent", "foo"})
+	assert.Contains(t, buf.String(), "expected command but got")
+	assert.NotContains(t, buf.String(), "Flags")
+
+	buf.Reset()
+	c.MustParseWithUsage([]string{"parent", "child", "--thing"})
+	assert.Contains(t, buf.String(), "expected argument for flag")
+	assert.Contains(t, buf.String(), "Flags")
+
+	buf.Reset()
+	c.MustParseWithUsage([]string{"parent", "child", "--unknown"})
+	assert.Contains(t, buf.String(), "unknown long flag")
+	assert.Contains(t, buf.String(), "Flags")
+
+	buf.Reset()
+	c.MustParseWithUsage([]string{"parent", "child", "-u"})
+	assert.Contains(t, buf.String(), "unknown short flag")
+	assert.Contains(t, buf.String(), "Flags")
+
+	buf.Reset()
+	c.MustParseWithUsage([]string{"parent", "child", "--thing", "x", "--thing", "x"})
+	assert.Contains(t, buf.String(), "flag 'thing' cannot be repeated")
+	assert.Contains(t, buf.String(), "Flags")
 }
