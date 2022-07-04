@@ -28,19 +28,20 @@ type Application struct {
 	Name string
 	Help string
 
-	author         string
-	version        string
-	errorWriter    io.Writer // Destination for errors.
-	usageWriter    io.Writer // Destination for usage
-	usageTemplate  string
-	usageFuncs     template.FuncMap
-	validator      ApplicationValidator
-	terminate      func(status int) // See Terminate()
-	noInterspersed bool             // can flags be interspersed with args (or must they come first)
-	defaultEnvars  bool
-	completion     bool
-	cheats         map[string]string
-	cheatTags      []string
+	author             string
+	version            string
+	errorWriter        io.Writer // Destination for errors.
+	usageWriter        io.Writer // Destination for usage
+	usageTemplate      string
+	errorUsageTemplate string
+	usageFuncs         template.FuncMap
+	validator          ApplicationValidator
+	terminate          func(status int) // See Terminate()
+	noInterspersed     bool             // can flags be interspersed with args (or must they come first)
+	defaultEnvars      bool
+	completion         bool
+	cheats             map[string]string
+	cheatTags          []string
 
 	// Help flag. Exposed for user customisation.
 	HelpFlag *FlagClause
@@ -60,14 +61,15 @@ func Newf(name string, format string, a ...interface{}) *Application {
 // New creates a new Fisk application instance.
 func New(name, help string) *Application {
 	a := &Application{
-		Name:          name,
-		Help:          help,
-		errorWriter:   os.Stderr, // Left for backwards compatibility purposes.
-		usageWriter:   os.Stderr,
-		usageTemplate: ShorterMainUsageTemplate,
-		terminate:     os.Exit,
-		cheats:        map[string]string{},
-		cheatTags:     []string{name},
+		Name:               name,
+		Help:               help,
+		errorWriter:        os.Stderr, // Left for backwards compatibility purposes.
+		usageWriter:        os.Stderr,
+		usageTemplate:      ShorterMainUsageTemplate,
+		errorUsageTemplate: compactWithoutFlagsOrArgs,
+		terminate:          os.Exit,
+		cheats:             map[string]string{},
+		cheatTags:          []string{name},
 	}
 
 	a.flagGroup = newFlagGroup()
@@ -175,6 +177,14 @@ func (a *Application) UsageWriter(w io.Writer) *Application {
 // information. The default is UsageTemplate.
 func (a *Application) UsageTemplate(template string) *Application {
 	a.usageTemplate = template
+	return a
+}
+
+// ErrorUsageTemplate specifies the text template to use when displaying usage
+// information after an ErrSubCommandRequired ErrExpectedKnownCommand. The
+// default is compactWithoutFlagsOrArgs.
+func (a *Application) ErrorUsageTemplate(template string) *Application {
+	a.errorUsageTemplate = template
 	return a
 }
 
@@ -824,11 +834,11 @@ func (a *Application) MustParseWithUsage(args []string) (command string) {
 	switch {
 	case errorIs(err, ErrSubCommandRequired):
 		fmt.Fprintf(a.errorWriter, "error: a subcommand from the list below is required, use --help for full help including flags and arguments\n\n")
-		ut = compactWithoutFlagsOrArgs
+		ut = a.errorUsageTemplate
 
 	case errorIs(err, ErrExpectedKnownCommand):
 		fmt.Fprintf(a.errorWriter, "error: %v, use --help for full help including flags and arguments\n\n", err)
-		ut = compactWithoutFlagsOrArgs
+		ut = a.errorUsageTemplate
 
 	case errorIs(err, ErrRequiredArgument, ErrRequiredFlag, ErrUnknownLongFlag, ErrUnknownShortFlag, ErrExpectedFlagArgument, ErrFlagCannotRepeat, ErrUnexpectedArgument):
 		fmt.Fprintf(a.errorWriter, "error: %v\n\n", err)

@@ -71,6 +71,69 @@ Commands:
 {{end}}\
 `
 
+// CompactMainUsageTemplate formats commands and subcommands in a two column
+// layout to make for a cleaners and more readable usage text. In this format,
+// sections are rendered as follows. Global flags are also separate from local
+// flags in this template. Global flags will be shown at the top level and local
+// flags will be shown when showing help for a subcommand.
+//
+// usage: <command> [<flags>] <command> [<arg> ...]
+//
+// Help text
+//
+// Commands|Subcommands:
+//   command1    Help text for command 1
+//   command2    Help text for command 2
+//   command2    Help text for command 3
+//
+// Flags:
+//   -h, --help     Show context-sensitive help
+//
+var CompactMainUsageTemplate = `{{define "FormatCommand"}}\
+{{if .FlagSummary}} {{.FlagSummary}}{{end}}\
+{{range .Args}} {{if not .Required}}[{{end}}<{{.Name}}>{{if .Value|IsCumulative}}...{{end}}{{if not .Required}}]{{end}}{{end}}\
+{{end}}\
+
+{{define "FormatUsage"}}\
+{{template "FormatCommand" .}}{{if .Commands}} <command> [<args> ...]{{end}}
+{{if .Help}}
+{{.Help|Wrap 0}}\
+{{end}}\
+{{end}}\
+
+{{if .Context.SelectedCommand}}\
+usage: {{.App.Name}} {{.Context.SelectedCommand}}{{template "FormatUsage" .Context.SelectedCommand}}
+{{if .Context.SelectedCommand.HelpLong}}{{.Context.SelectedCommand.HelpLong|Wrap 0}}
+{{end}}\
+{{else}}\
+usage: {{.App.Name}}{{template "FormatUsage" .App}}
+{{end}}\
+{{if .Context.SelectedCommand}}\
+{{if .Context.Args}}\
+Args:
+{{.Context.Args|ArgsToTwoColumns|FormatTwoColumns}}
+{{end}}\
+{{if len .Context.SelectedCommand.Commands}}\
+Subcommands:
+{{.Context.SelectedCommand.Commands|CommandsToTwoColumns|FormatTwoColumns}}
+{{end}}\
+{{else if .App.Commands}}\
+Commands:
+{{.App.Commands|CommandsToTwoColumns|FormatTwoColumns}}
+{{end}}\
+{{if .Context.SelectedCommand}}\
+{{if .Context.SelectedCommand.Flags|VisibleFlags}}\
+Flags:
+{{.Context.SelectedCommand.Flags|FlagsToTwoColumns|FormatTwoColumns}}
+{{end}}\
+{{else}}\
+{{if .Context.Flags|VisibleFlags}}\
+Global Flags:
+{{.Context.Flags|FlagsToTwoColumns|FormatTwoColumns}}
+{{end}}\
+{{end}}\
+`
+
 // KingpinDefaultUsageTemplate is the default usage template as used by kingpin
 var KingpinDefaultUsageTemplate = `{{define "FormatCommand"}}\
 {{if .FlagSummary}} {{.FlagSummary}}{{end}}\

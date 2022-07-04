@@ -177,6 +177,16 @@ func (a *Application) UsageForContextWithTemplate(context *ParseContext, indent 
 			}
 			return optionalFlags
 		},
+		"CommandsToTwoColumns": func(c []*CmdModel) [][2]string {
+			rows := [][2]string{}
+			for _, cmd := range c {
+				if !cmd.Hidden && cmd.FullCommand != "help" {
+					shortHelp := strings.Split(cmd.Help, "\n")[0]
+					rows = append(rows, [2]string{cmd.FullCommand, shortHelp})
+				}
+			}
+			return rows
+		},
 		"ArgsToTwoColumns": func(a []*ArgModel) [][2]string {
 			rows := [][2]string{}
 			for _, arg := range a {
