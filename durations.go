@@ -30,6 +30,11 @@ var (
 //
 // Valid duration strings can be -1y1d1µs
 func ParseDuration(d string) (time.Duration, error) {
+	// golang time.ParseDuration has a special case for 0
+	if d == "0" {
+		return 0 * time.Second, nil
+	}
+
 	var (
 		r   time.Duration
 		neg = 1
