@@ -20,6 +20,7 @@ func TestDurationParser(t *testing.T) {
 		{"1Y1M", (365 * 24 * time.Hour) + (24 * 30 * time.Hour), nil},
 		{"1xX", 0, fmt.Errorf("%w: invalid unit xX", errInvalidDuration)},
 		{"-1", 0, fmt.Errorf("invalid duration")},
+		{"0", 0, nil},
 	}
 
 	for _, c := range cases {
