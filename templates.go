@@ -79,16 +79,17 @@ Commands:
 //
 // usage: <command> [<flags>] <command> [<arg> ...]
 //
-// Help text
+// # Help text
 //
 // Commands|Subcommands:
-//   command1    Help text for command 1
-//   command2    Help text for command 2
-//   command2    Help text for command 3
+//
+//	command1    Help text for command 1
+//	command2    Help text for command 2
+//	command2    Help text for command 3
 //
 // Flags:
-//   -h, --help     Show context-sensitive help
 //
+//	-h, --help     Show context-sensitive help
 var CompactMainUsageTemplate = `{{define "FormatCommand"}}\
 {{if .FlagSummary}} {{.FlagSummary}}{{end}}\
 {{range .Args}} {{if not .Required}}[{{end}}<{{.Name}}>{{if .Value|IsCumulative}}...{{end}}{{if not .Required}}]{{end}}{{end}}\
@@ -268,32 +269,6 @@ Flags:
 Args:
 {{.Context.Args|ArgsToTwoColumns|FormatTwoColumns}}
 {{end}}\
-{{if .Context.SelectedCommand}}\
-{{if .Context.SelectedCommand.Commands}}\
-Commands:
-  {{.Context.SelectedCommand}}
-{{template "FormatCommandList" .Context.SelectedCommand.Commands}}
-{{end}}\
-{{else if .App.Commands}}\
-Commands:
-{{template "FormatCommandList" .App.Commands}}
-{{end}}\
-`
-
-var compactWithoutFlagsOrArgs = `{{define "FormatCommand"}}\
-{{if .FlagSummary}} {{.FlagSummary}}{{end}}\
-{{range .Args}}{{if not .Hidden}} {{if not .Required}}[{{end}}{{if .PlaceHolder}}{{.PlaceHolder}}{{else}}<{{.Name}}>{{end}}{{if .Value|IsCumulative}}...{{end}}{{if not .Required}}]{{end}}{{end}}{{end}}\
-{{end}}\
-
-{{define "FormatCommandList"}}\
-{{range .}}\
-{{if not .Hidden}}\
-{{.Depth|Indent}}{{.Name}}{{if .Default}}*{{end}}{{template "FormatCommand" .}}
-{{end}}\
-{{template "FormatCommandList" .Commands}}\
-{{end}}\
-{{end}}\
-
 {{if .Context.SelectedCommand}}\
 {{if .Context.SelectedCommand.Commands}}\
 Commands:

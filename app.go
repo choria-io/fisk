@@ -65,8 +65,8 @@ func New(name, help string) *Application {
 		Help:               help,
 		errorWriter:        os.Stderr, // Left for backwards compatibility purposes.
 		usageWriter:        os.Stderr,
-		usageTemplate:      ShorterMainUsageTemplate,
-		errorUsageTemplate: compactWithoutFlagsOrArgs,
+		usageTemplate:      CompactMainUsageTemplate,
+		errorUsageTemplate: CompactMainUsageTemplate,
 		terminate:          os.Exit,
 		cheats:             map[string]string{},
 		cheatTags:          []string{name},
