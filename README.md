@@ -30,6 +30,7 @@ Some historical points in time are kept:
  * Unnegatable booleans using a new `UnNegatableBool()` flag type, backwards compatibility kept
  * Extended parsing for durations that include weeks (`w`, `W`), months (`M`), years (`y`, `Y`) and days (`d`, `D`) units (`v0.1.3` or newer)
  * More contextually useful help when using `app.MustParseWithUsage(os.Args[1:])` (`v0.1.4` or newer)
+ * Default usage template is `CompactMainUsageTemplate` since `v0.3.0` 
 
 ### UnNegatableBool
 
