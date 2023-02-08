@@ -86,9 +86,10 @@ type accumulator struct {
 // Use reflection to accumulate values into a slice.
 //
 // target := []string{}
-// newAccumulator(&target, func (value interface{}) Value {
-//   return newStringValue(value.(*string))
-// })
+//
+//	newAccumulator(&target, func (value interface{}) Value {
+//	  return newStringValue(value.(*string))
+//	})
 func newAccumulator(slice interface{}, element func(value interface{}) Value) *accumulator {
 	typ := reflect.TypeOf(slice)
 	if typ.Kind() != reflect.Ptr || typ.Elem().Kind() != reflect.Slice {
