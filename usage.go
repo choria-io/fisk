@@ -7,8 +7,7 @@ import (
 	"go/doc"
 	"io"
 	"strings"
-
-	"github.com/choria-io/fisk/template"
+	"text/template"
 )
 
 var (
@@ -16,10 +15,15 @@ var (
 )
 
 func formatTwoColumns(w io.Writer, indent, padding, width int, rows [][2]string) {
+	max := int(float32(width) * 0.75 / 2)
+	if max < 30 {
+		max = 30
+	}
+
 	// Find size of first column.
 	s := 0
 	for _, row := range rows {
-		if c := len(row[0]); c > s && c < 30 {
+		if c := len(row[0]); c > s && c < max {
 			s = c
 		}
 	}
@@ -32,7 +36,7 @@ func formatTwoColumns(w io.Writer, indent, padding, width int, rows [][2]string)
 		doc.ToText(buf, row[1], "", preIndent, width-s-padding-indent)
 		lines := strings.Split(strings.TrimRight(buf.String(), "\n"), "\n")
 		fmt.Fprintf(w, "%s%-*s%*s", indentStr, s, row[0], padding, "")
-		if len(row[0]) >= 30 {
+		if len(row[0]) >= max {
 			fmt.Fprintf(w, "\n%s%s", indentStr, offsetStr)
 		}
 		fmt.Fprintf(w, "%s\n", lines[0])

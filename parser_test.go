@@ -1,7 +1,6 @@
 package fisk
 
 import (
-	"io/ioutil"
 	"os"
 	"testing"
 
@@ -9,7 +8,7 @@ import (
 )
 
 func TestParserExpandFromFile(t *testing.T) {
-	f, err := ioutil.TempFile("", "")
+	f, err := os.CreateTemp("", "")
 	assert.NoError(t, err)
 	defer os.Remove(f.Name())
 	f.WriteString("hello\nworld\n")
@@ -26,7 +25,7 @@ func TestParserExpandFromFile(t *testing.T) {
 }
 
 func TestParserExpandFromFileLeadingArg(t *testing.T) {
-	f, err := ioutil.TempFile("", "")
+	f, err := os.CreateTemp("", "")
 	assert.NoError(t, err)
 	defer os.Remove(f.Name())
 	f.WriteString("hello\nworld\n")
@@ -45,7 +44,7 @@ func TestParserExpandFromFileLeadingArg(t *testing.T) {
 }
 
 func TestParserExpandFromFileTrailingArg(t *testing.T) {
-	f, err := ioutil.TempFile("", "")
+	f, err := os.CreateTemp("", "")
 	assert.NoError(t, err)
 	defer os.Remove(f.Name())
 	f.WriteString("hello\nworld\n")
@@ -64,7 +63,7 @@ func TestParserExpandFromFileTrailingArg(t *testing.T) {
 }
 
 func TestParserExpandFromFileMultipleSurroundingArgs(t *testing.T) {
-	f, err := ioutil.TempFile("", "")
+	f, err := os.CreateTemp("", "")
 	assert.NoError(t, err)
 	defer os.Remove(f.Name())
 	f.WriteString("hello\nworld\n")
@@ -85,7 +84,7 @@ func TestParserExpandFromFileMultipleSurroundingArgs(t *testing.T) {
 }
 
 func TestParserExpandFromFileMultipleFlags(t *testing.T) {
-	f, err := ioutil.TempFile("", "")
+	f, err := os.CreateTemp("", "")
 	assert.NoError(t, err)
 	defer os.Remove(f.Name())
 	f.WriteString("--flag1=f1\n--flag2=f2\n")

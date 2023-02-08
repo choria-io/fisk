@@ -5,8 +5,8 @@ import (
 	"os"
 	"os/exec"
 	"strings"
+	"text/template"
 
-	"github.com/choria-io/fisk/template"
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
 )
@@ -39,9 +39,9 @@ func (f *{{.|ValueName}}) String() string { return {{.|Format}} }
 
 {{if .Help}}
 // {{.Help}}
-{{else}}\
+{{else-}}
 // {{.|Name}} parses the next command-line value as {{.Type}}.
-{{end}}\
+{{end-}}
 func (p *parserMixin) {{.|Name}}() (target *{{.Type}}) {
 	target = new({{.Type}})
 	p.{{.|Name}}Var(target)

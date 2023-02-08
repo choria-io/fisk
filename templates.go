@@ -13,62 +13,62 @@ package fisk
 //
 // This yields a friendlier welcome to new users with the details should
 // they do help on any sub command
-var ShorterMainUsageTemplate = `{{define "FormatCommand"}}\
-{{if .FlagSummary}} {{.FlagSummary}}{{end}}\
-{{range .Args}} {{if not .Required}}[{{end}}<{{.Name}}>{{if .Value|IsCumulative}}...{{end}}{{if not .Required}}]{{end}}{{end}}\
-{{end}}\
+var ShorterMainUsageTemplate = `{{define "FormatCommand" -}}
+{{if .FlagSummary}} {{.FlagSummary}}{{end -}}
+{{range .Args}} {{if not .Required}}[{{end}}<{{.Name}}>{{if .Value|IsCumulative}}...{{end}}{{if not .Required}}]{{end}}{{end -}}
+{{end -}}
 
-{{define "FormatCommands"}}\
-{{range .Commands}}\
-{{if not .Hidden}}\
+{{define "FormatCommands" -}}
+{{range .Commands -}}
+{{if not .Hidden -}}
   {{.FullCommand}}{{if .Default}}*{{end}}{{template "FormatCommand" .}}
 {{.Help|Wrap 4}}
-{{end}}\
-{{end}}\
-{{end}}\
+{{end -}}
+{{end -}}
+{{end -}}
 
-{{ define "FormatCommandsForTopLevel" }}\
-{{range .Commands}}\
-{{if not .Hidden}}\
-{{if not (eq .FullCommand "help")}}\
+{{ define "FormatCommandsForTopLevel"  -}}
+{{range .Commands -}}
+{{if not .Hidden -}}
+{{if not (eq .FullCommand "help") -}}
   {{.FullCommand}}{{if .Default}}*{{end}}{{template "FormatCommand" .}}
 {{.Help|FirstLine|Wrap 4}}
-{{end}}\
-{{end}}\
-{{end}}\
-{{end}}\
+{{end -}}
+{{end -}}
+{{end -}}
+{{end -}}
 
-{{define "FormatUsage"}}\
+{{define "FormatUsage" -}}
 {{template "FormatCommand" .}}{{if .Commands}} <command> [<args> ...]{{end}}
 {{if .Help}}
-{{.Help|Wrap 0}}\
-{{end}}\
-{{end}}\
+{{.Help|Wrap 0 -}}
+{{end -}}
+{{end -}}
 
-{{if .Context.SelectedCommand}}\
+{{if .Context.SelectedCommand -}}
 usage: {{.App.Name}} {{.Context.SelectedCommand}}{{template "FormatUsage" .Context.SelectedCommand}}
 {{if .Context.SelectedCommand.HelpLong}}{{.Context.SelectedCommand.HelpLong|Wrap 0}}
 {{end}}
-{{else}}\
+{{else -}}
 usage: {{.App.Name}}{{template "FormatUsage" .App}}
-{{end}}\
-{{if .Context.SelectedCommand}}\
-{{if .Context.Flags|VisibleFlags}}\
+{{end -}}
+{{if .Context.SelectedCommand -}}
+{{if .Context.Flags|VisibleFlags -}}
 Flags:
 {{.Context.Flags|FlagsToTwoColumns|FormatTwoColumns}}
-{{end}}\
-{{if .Context.Args}}\
+{{end -}}
+{{if .Context.Args -}}
 Args:
 {{.Context.Args|ArgsToTwoColumns|FormatTwoColumns}}
-{{end}}\
-{{if len .Context.SelectedCommand.Commands}}\
+{{end -}}
+{{if len .Context.SelectedCommand.Commands -}}
 Subcommands:
 {{template "FormatCommands" .Context.SelectedCommand}}
-{{end}}\
-{{else if .App.Commands}}\
+{{end -}}
+{{else if .App.Commands -}}
 Commands:
 {{template "FormatCommandsForTopLevel" .App}}
-{{end}}\
+{{end -}}
 `
 
 // CompactMainUsageTemplate formats commands and subcommands in a two column
@@ -90,228 +90,228 @@ Commands:
 // Flags:
 //
 //	-h, --help     Show context-sensitive help
-var CompactMainUsageTemplate = `{{define "FormatCommand"}}\
-{{if .FlagSummary}} {{.FlagSummary}}{{end}}\
-{{range .Args}} {{if not .Required}}[{{end}}<{{.Name}}>{{if .Value|IsCumulative}}...{{end}}{{if not .Required}}]{{end}}{{end}}\
-{{end}}\
+var CompactMainUsageTemplate = `{{define "FormatCommand" -}}
+{{if .FlagSummary}} {{.FlagSummary}}{{end -}}
+{{range .Args}} {{if not .Required}}[{{end}}<{{.Name}}>{{if .Value|IsCumulative}}...{{end}}{{if not .Required}}]{{end}}{{end -}}
+{{end -}}
 
-{{define "FormatUsage"}}\
+{{define "FormatUsage" -}}
 {{template "FormatCommand" .}}{{if .Commands}} <command> [<args> ...]{{end}}
 {{if .Help}}
-{{.Help|Wrap 0}}\
-{{end}}\
-{{end}}\
+{{.Help|Wrap 0 -}}
+{{end -}}
+{{end -}}
 
-{{if .Context.SelectedCommand}}\
+{{if .Context.SelectedCommand -}}
 usage: {{.App.Name}} {{.Context.SelectedCommand}}{{template "FormatUsage" .Context.SelectedCommand}}
 {{if .Context.SelectedCommand.HelpLong}}{{.Context.SelectedCommand.HelpLong|Wrap 0}}
-{{end}}\
-{{else}}\
+{{end -}}
+{{else -}}
 usage: {{.App.Name}}{{template "FormatUsage" .App}}
-{{end}}\
-{{if .Context.SelectedCommand}}\
-{{if .Context.Args}}\
+{{end -}}
+{{if .Context.SelectedCommand -}}
+{{if .Context.Args -}}
 Args:
 {{.Context.Args|ArgsToTwoColumns|FormatTwoColumns}}
-{{end}}\
-{{if len .Context.SelectedCommand.Commands}}\
+{{end -}}
+{{if len .Context.SelectedCommand.Commands -}}
 Subcommands:
 {{.Context.SelectedCommand.Commands|CommandsToTwoColumns|FormatTwoColumns}}
-{{end}}\
-{{else if .App.Commands}}\
+{{end -}}
+{{else if .App.Commands -}}
 Commands:
 {{.App.Commands|CommandsToTwoColumns|FormatTwoColumns}}
-{{end}}\
-{{if .Context.SelectedCommand}}\
-{{if .Context.SelectedCommand.Flags|VisibleFlags}}\
+{{end -}}
+{{if .Context.SelectedCommand -}}
+{{if .Context.SelectedCommand.Flags|VisibleFlags -}}
 Flags:
 {{.Context.SelectedCommand.Flags|FlagsToTwoColumns|FormatTwoColumns}}
-{{end}}\
-{{else}}\
-{{if .Context.Flags|VisibleFlags}}\
+{{end -}}
+{{else -}}
+{{if .Context.Flags|VisibleFlags -}}
 Global Flags:
 {{.Context.Flags|FlagsToTwoColumns|FormatTwoColumns}}
-{{end}}\
-{{end}}\
+{{end -}}
+{{end -}}
 `
 
 // KingpinDefaultUsageTemplate is the default usage template as used by kingpin
-var KingpinDefaultUsageTemplate = `{{define "FormatCommand"}}\
-{{if .FlagSummary}} {{.FlagSummary}}{{end}}\
-{{range .Args}}{{if not .Hidden}} {{if not .Required}}[{{end}}{{if .PlaceHolder}}{{.PlaceHolder}}{{else}}<{{.Name}}>{{end}}{{if .Value|IsCumulative}}...{{end}}{{if not .Required}}]{{end}}{{end}}{{end}}\
-{{end}}\
+var KingpinDefaultUsageTemplate = `{{define "FormatCommand" -}}
+{{if .FlagSummary}} {{.FlagSummary}}{{end -}}
+{{range .Args}}{{if not .Hidden}} {{if not .Required}}[{{end}}{{if .PlaceHolder}}{{.PlaceHolder}}{{else}}<{{.Name}}>{{end}}{{if .Value|IsCumulative}}...{{end}}{{if not .Required}}]{{end}}{{end}}{{end -}}
+{{end -}}
 
-{{define "FormatCommands"}}\
-{{range .FlattenedCommands}}\
-{{if not .Hidden}}\
+{{define "FormatCommands" -}}
+{{range .FlattenedCommands -}}
+{{if not .Hidden -}}
   {{.FullCommand}}{{if .Default}}*{{end}}{{template "FormatCommand" .}}
 {{.Help|Wrap 4}}
-{{end}}\
-{{end}}\
-{{end}}\
+{{end -}}
+{{end -}}
+{{end -}}
 
-{{define "FormatUsage"}}\
+{{define "FormatUsage" -}}
 {{template "FormatCommand" .}}{{if .Commands}} <command> [<args> ...]{{end}}
 {{if .Help}}
-{{.Help|Wrap 0}}\
-{{end}}\
+{{.Help|Wrap 0 -}}
+{{end -}}
 
-{{end}}\
+{{end -}}
 
-{{if .Context.SelectedCommand}}\
+{{if .Context.SelectedCommand -}}
 usage: {{.App.Name}} {{.Context.SelectedCommand}}{{template "FormatUsage" .Context.SelectedCommand}}
-{{else}}\
+{{else -}}
 usage: {{.App.Name}}{{template "FormatUsage" .App}}
-{{end}}\
-{{if .Context.Flags|VisibleFlags}}\
+{{end -}}
+{{if .Context.Flags|VisibleFlags -}}
 Flags:
 {{.Context.Flags|FlagsToTwoColumns|FormatTwoColumns}}
-{{end}}\
-{{if .Context.Args}}\
+{{end -}}
+{{if .Context.Args -}}
 Args:
 {{.Context.Args|ArgsToTwoColumns|FormatTwoColumns}}
-{{end}}\
-{{if .Context.SelectedCommand}}\
-{{if len .Context.SelectedCommand.Commands}}\
+{{end -}}
+{{if .Context.SelectedCommand -}}
+{{if len .Context.SelectedCommand.Commands -}}
 Subcommands:
 {{template "FormatCommands" .Context.SelectedCommand}}
-{{end}}\
-{{else if .App.Commands}}\
+{{end -}}
+{{else if .App.Commands -}}
 Commands:
 {{template "FormatCommands" .App}}
-{{end}}\
+{{end -}}
 `
 
 // SeparateOptionalFlagsUsageTemplate is a usage template where command's optional flags are listed separately
-var SeparateOptionalFlagsUsageTemplate = `{{define "FormatCommand"}}\
-{{if .FlagSummary}} {{.FlagSummary}}{{end}}\
-{{range .Args}}{{if not .Hidden}} {{if not .Required}}[{{end}}{{if .PlaceHolder}}{{.PlaceHolder}}{{else}}<{{.Name}}>{{end}}{{if .Value|IsCumulative}}...{{end}}{{if not .Required}}]{{end}}{{end}}{{end}}\
-{{end}}\
+var SeparateOptionalFlagsUsageTemplate = `{{define "FormatCommand" -}}
+{{if .FlagSummary}} {{.FlagSummary}}{{end -}}
+{{range .Args}}{{if not .Hidden}} {{if not .Required}}[{{end}}{{if .PlaceHolder}}{{.PlaceHolder}}{{else}}<{{.Name}}>{{end}}{{if .Value|IsCumulative}}...{{end}}{{if not .Required}}]{{end}}{{end}}{{end -}}
+{{end -}}
 
-{{define "FormatCommands"}}\
-{{range .FlattenedCommands}}\
-{{if not .Hidden}}\
+{{define "FormatCommands" -}}
+{{range .FlattenedCommands -}}
+{{if not .Hidden -}}
   {{.FullCommand}}{{if .Default}}*{{end}}{{template "FormatCommand" .}}
 {{.Help|Wrap 4}}
-{{end}}\
-{{end}}\
-{{end}}\
+{{end -}}
+{{end -}}
+{{end -}}
 
-{{define "FormatUsage"}}\
+{{define "FormatUsage" -}}
 {{template "FormatCommand" .}}{{if .Commands}} <command> [<args> ...]{{end}}
 {{if .Help}}
-{{.Help|Wrap 0}}\
-{{end}}\
+{{.Help|Wrap 0 -}}
+{{end -}}
 
-{{end}}\
-{{if .Context.SelectedCommand}}\
+{{end -}}
+{{if .Context.SelectedCommand -}}
 usage: {{.App.Name}} {{.Context.SelectedCommand}}{{template "FormatUsage" .Context.SelectedCommand}}
-{{else}}\
+{{else -}}
 usage: {{.App.Name}}{{template "FormatUsage" .App}}
-{{end}}\
+{{end -}}
 
-{{if .Context.Flags|RequiredFlags}}\
+{{if .Context.Flags|RequiredFlags -}}
 Required flags:
 {{.Context.Flags|RequiredFlags|FlagsToTwoColumns|FormatTwoColumns}}
-{{end}}\
-{{if  .Context.Flags|OptionalFlags}}\
+{{end -}}
+{{if  .Context.Flags|OptionalFlags -}}
 Optional flags:
 {{.Context.Flags|OptionalFlags|FlagsToTwoColumns|FormatTwoColumns}}
-{{end}}\
-{{if .Context.Args}}\
+{{end -}}
+{{if .Context.Args -}}
 Args:
 {{.Context.Args|ArgsToTwoColumns|FormatTwoColumns}}
-{{end}}\
-{{if .Context.SelectedCommand}}\
+{{end -}}
+{{if .Context.SelectedCommand -}}
 Subcommands:
-{{if .Context.SelectedCommand.Commands}}\
+{{if .Context.SelectedCommand.Commands -}}
 {{template "FormatCommands" .Context.SelectedCommand}}
-{{end}}\
-{{else if .App.Commands}}\
+{{end -}}
+{{else if .App.Commands -}}
 Commands:
 {{template "FormatCommands" .App}}
-{{end}}\
+{{end -}}
 `
 
 // CompactUsageTemplate is a usage template with compactly formatted commands.
-var CompactUsageTemplate = `{{define "FormatCommand"}}\
-{{if .FlagSummary}} {{.FlagSummary}}{{end}}\
-{{range .Args}}{{if not .Hidden}} {{if not .Required}}[{{end}}{{if .PlaceHolder}}{{.PlaceHolder}}{{else}}<{{.Name}}>{{end}}{{if .Value|IsCumulative}}...{{end}}{{if not .Required}}]{{end}}{{end}}{{end}}\
-{{end}}\
+var CompactUsageTemplate = `{{define "FormatCommand" -}}
+{{if .FlagSummary}} {{.FlagSummary}}{{end -}}
+{{range .Args}}{{if not .Hidden}} {{if not .Required}}[{{end}}{{if .PlaceHolder}}{{.PlaceHolder}}{{else}}<{{.Name}}>{{end}}{{if .Value|IsCumulative}}...{{end}}{{if not .Required}}]{{end}}{{end}}{{end -}}
+{{end -}}
 
-{{define "FormatCommandList"}}\
-{{range .}}\
-{{if not .Hidden}}\
+{{define "FormatCommandList" -}}
+{{range . -}}
+{{if not .Hidden -}}
 {{.Depth|Indent}}{{.Name}}{{if .Default}}*{{end}}{{template "FormatCommand" .}}
-{{end}}\
-{{template "FormatCommandList" .Commands}}\
-{{end}}\
-{{end}}\
+{{end -}}
+{{template "FormatCommandList" .Commands -}}
+{{end -}}
+{{end -}}
 
-{{define "FormatUsage"}}\
+{{define "FormatUsage" -}}
 {{template "FormatCommand" .}}{{if .Commands}} <command> [<args> ...]{{end}}
 {{if .Help}}
-{{.Help|Wrap 0}}\
-{{end}}\
+{{.Help|Wrap 0 -}}
+{{end -}}
 
-{{end}}\
+{{end -}}
 
-{{if .Context.SelectedCommand}}\
+{{if .Context.SelectedCommand -}}
 usage: {{.App.Name}} {{.Context.SelectedCommand}}{{template "FormatUsage" .Context.SelectedCommand}}
-{{else}}\
+{{else -}}
 usage: {{.App.Name}}{{template "FormatUsage" .App}}
-{{end}}\
-{{if .Context.Flags|VisibleFlags}}\
+{{end -}}
+{{if .Context.Flags|VisibleFlags -}}
 Flags:
 {{.Context.Flags|FlagsToTwoColumns|FormatTwoColumns}}
-{{end}}\
-{{if .Context.Args}}\
+{{end -}}
+{{if .Context.Args -}}
 Args:
 {{.Context.Args|ArgsToTwoColumns|FormatTwoColumns}}
-{{end}}\
-{{if .Context.SelectedCommand}}\
-{{if .Context.SelectedCommand.Commands}}\
+{{end -}}
+{{if .Context.SelectedCommand -}}
+{{if .Context.SelectedCommand.Commands -}}
 Commands:
   {{.Context.SelectedCommand}}
 {{template "FormatCommandList" .Context.SelectedCommand.Commands}}
-{{end}}\
-{{else if .App.Commands}}\
+{{end -}}
+{{else if .App.Commands -}}
 Commands:
 {{template "FormatCommandList" .App.Commands}}
-{{end}}\
+{{end -}}
 `
 
 // ManPageTemplate renders usage in unix man format
-var ManPageTemplate = `{{define "FormatFlags"}}\
-{{range .Flags}}\
-{{if not .Hidden}}\
+var ManPageTemplate = `{{define "FormatFlags" -}}
+{{range .Flags -}}
+{{if not .Hidden -}}
 .TP
-\fB{{if .Short}}-{{.Short|Char}}, {{end}}--{{.Name}}{{if not .IsBoolFlag}}={{.FormatPlaceHolder}}{{end}}\\fR
+\fB{{if .Short}}-{{.Short|Char}}, {{end}}--{{.Name}}{{if not .IsBoolFlag}}={{.FormatPlaceHolder}}{{end -}}\fR
 {{.Help}}
-{{end}}\
-{{end}}\
-{{end}}\
+{{end -}}
+{{end -}}
+{{end -}}
 
-{{define "FormatCommand"}}\
-{{if .FlagSummary}} {{.FlagSummary}}{{end}}\
-{{range .Args}}{{if not .Hidden}} {{if not .Required}}[{{end}}{{if .PlaceHolder}}{{.PlaceHolder}}{{else}}<{{.Name}}>{{end}}{{if .Value|IsCumulative}}...{{end}}{{if not .Required}}]{{end}}{{end}}{{end}}\
-{{end}}\
+{{define "FormatCommand" -}}
+{{if .FlagSummary}} {{.FlagSummary}}{{end -}}
+{{range .Args}}{{if not .Hidden}} {{if not .Required}}[{{end}}{{if .PlaceHolder}}{{.PlaceHolder}}{{else}}<{{.Name}}>{{end}}{{if .Value|IsCumulative}}...{{end}}{{if not .Required}}]{{end}}{{end}}{{end -}}
+{{end -}}
 
-{{define "FormatCommands"}}\
-{{range .FlattenedCommands}}\
-{{if not .Hidden}}\
+{{define "FormatCommands" -}}
+{{range .FlattenedCommands -}}
+{{if not .Hidden -}}
 .SS
-\fB{{.FullCommand}}{{template "FormatCommand" .}}\\fR
+\fB{{.FullCommand}}{{template "FormatCommand" . -}}\fR
 .PP
 {{.Help}}
-{{template "FormatFlags" .}}\
-{{end}}\
-{{end}}\
-{{end}}\
+{{template "FormatFlags" . -}}
+{{end -}}
+{{end -}}
+{{end -}}
 
-{{define "FormatUsage"}}\
-{{template "FormatCommand" .}}{{if .Commands}} <command> [<args> ...]{{end}}\\fR
-{{end}}\
+{{define "FormatUsage" -}}
+{{template "FormatCommand" .}}{{if .Commands}} <command> [<args> ...]{{end -}}\fR
+{{end -}}
 
 .TH {{.App.Name}} 1 {{.App.Version}} "{{.App.Author}}"
 .SH "NAME"
@@ -322,50 +322,50 @@ var ManPageTemplate = `{{define "FormatFlags"}}\
 .SH "DESCRIPTION"
 {{.App.Help}}
 .SH "OPTIONS"
-{{template "FormatFlags" .App}}\
-{{if .App.Commands}}\
+{{template "FormatFlags" .App -}}
+{{if .App.Commands -}}
 .SH "COMMANDS"
-{{template "FormatCommands" .App}}\
-{{end}}\
+{{template "FormatCommands" .App -}}
+{{end -}}
 `
 
 // LongHelpTemplate is a usage template for --help-long
-var LongHelpTemplate = `{{define "FormatCommand"}}\
-{{if .FlagSummary}} {{.FlagSummary}}{{end}}\
-{{range .Args}}{{if not .Hidden}} {{if not .Required}}[{{end}}{{if .PlaceHolder}}{{.PlaceHolder}}{{else}}<{{.Name}}>{{end}}{{if .Value|IsCumulative}}...{{end}}{{if not .Required}}]{{end}}{{end}}{{end}}\
-{{end}}\
+var LongHelpTemplate = `{{define "FormatCommand" -}}
+{{if .FlagSummary}} {{.FlagSummary}}{{end -}}
+{{range .Args}}{{if not .Hidden}} {{if not .Required}}[{{end}}{{if .PlaceHolder}}{{.PlaceHolder}}{{else}}<{{.Name}}>{{end}}{{if .Value|IsCumulative}}...{{end}}{{if not .Required}}]{{end}}{{end}}{{end -}}
+{{end -}}
 
-{{define "FormatCommands"}}\
-{{range .FlattenedCommands}}\
-{{if not .Hidden}}\
+{{define "FormatCommands" -}}
+{{range .FlattenedCommands -}}
+{{if not .Hidden -}}
   {{.FullCommand}}{{template "FormatCommand" .}}
 {{.Help|Wrap 4}}
 {{with .Flags|FlagsToTwoColumns}}{{FormatTwoColumnsWithIndent . 4 2}}{{end}}
-{{end}}\
-{{end}}\
-{{end}}\
+{{end -}}
+{{end -}}
+{{end -}}
 
-{{define "FormatUsage"}}\
+{{define "FormatUsage" -}}
 {{template "FormatCommand" .}}{{if .Commands}} <command> [<args> ...]{{end}}
 {{if .Help}}
-{{.Help|Wrap 0}}\
-{{end}}\
+{{.Help|Wrap 0 -}}
+{{end -}}
 
-{{end}}\
+{{end -}}
 
 usage: {{.App.Name}}{{template "FormatUsage" .App}}
-{{if .Context.Flags|VisibleFlags}}\
+{{if .Context.Flags|VisibleFlags -}}
 Flags:
 {{.Context.Flags|FlagsToTwoColumns|FormatTwoColumns}}
-{{end}}\
-{{if .Context.Args}}\
+{{end -}}
+{{if .Context.Args -}}
 Args:
 {{.Context.Args|ArgsToTwoColumns|FormatTwoColumns}}
-{{end}}\
-{{if .App.Commands}}\
+{{end -}}
+{{if .App.Commands -}}
 Commands:
 {{template "FormatCommands" .App}}
-{{end}}\
+{{end -}}
 `
 
 var BashCompletionTemplate = `

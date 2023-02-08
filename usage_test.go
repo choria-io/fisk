@@ -29,7 +29,7 @@ func TestFormatTwoColumnsWide(t *testing.T) {
 		{strings.Repeat("x", 29), "29 chars"},
 		{strings.Repeat("x", 30), "30 chars"}}
 	buf := bytes.NewBuffer(nil)
-	formatTwoColumns(buf, 0, 0, 200, samples)
+	formatTwoColumns(buf, 0, 0, 80, samples)
 	expected := `xxxxxxxxxxxxxxxxxxxxxxxxxxxxx29 chars
 xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
                              30 chars
@@ -80,7 +80,7 @@ func TestUsageFuncs(t *testing.T) {
 
 func TestCmdClause_HelpLong(t *testing.T) {
 	var buf bytes.Buffer
-	tpl := `{{define "FormatUsage"}}{{.HelpLong}}{{end}}\
+	tpl := `{{define "FormatUsage"}}{{.HelpLong}}{{end -}}
 {{template "FormatUsage" .Context.SelectedCommand}}`
 
 	a := New("test", "Test").Writer(&buf).Terminate(nil).UsageTemplate(KingpinDefaultUsageTemplate)
