@@ -51,6 +51,7 @@ func formatTwoColumns(w io.Writer, indent, padding, width int, rows [][2]string)
 func (a *Application) Usage(args []string) {
 	context, err := a.parseContext(true, args)
 	a.FatalIfError(err, "")
+
 	if err := a.UsageForContextWithTemplate(context, 2, a.usageTemplate); err != nil {
 		panic(err)
 	}
@@ -111,9 +112,10 @@ type templateParseContext struct {
 }
 
 type templateContext struct {
-	App     *ApplicationModel
-	Width   int
-	Context *templateParseContext
+	App           *ApplicationModel
+	HelpFlagIsSet bool
+	Width         int
+	Context       *templateParseContext
 }
 
 // UsageForContext displays usage information from a ParseContext (obtained from
@@ -161,6 +163,33 @@ func (a *Application) UsageForContextWithTemplate(context *ParseContext, indent 
 				}
 			}
 			return rows
+		},
+		"GlobalFlags": func(c *templateParseContext) []*FlagModel {
+			if c.SelectedCommand == nil {
+				return c.Flags
+			}
+
+			var sflags []string
+			for _, f := range c.SelectedCommand.Flags {
+				sflags = append(sflags, f.Name)
+			}
+
+			var globals []*FlagModel
+			for _, f := range c.Flags {
+				var known bool
+				for _, sf := range sflags {
+					if f.Name == sf {
+						known = true
+						break
+					}
+				}
+
+				if !known {
+					globals = append(globals, f)
+				}
+			}
+
+			return globals
 		},
 		"RequiredFlags": func(f []*FlagModel) []*FlagModel {
 			requiredFlags := []*FlagModel{}
@@ -251,8 +280,9 @@ func (a *Application) UsageForContextWithTemplate(context *ParseContext, indent 
 		selectedCommand = context.SelectedCommand.Model()
 	}
 	ctx := templateContext{
-		App:   a.Model(),
-		Width: width,
+		App:           a.Model(),
+		Width:         width,
+		HelpFlagIsSet: a.helpFlagIsSet,
 		Context: &templateParseContext{
 			SelectedCommand: selectedCommand,
 			FlagGroupModel:  context.flags.Model(),
