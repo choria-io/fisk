@@ -42,6 +42,7 @@ type Application struct {
 	completion         bool
 	cheats             map[string]string
 	cheatTags          []string
+	helpFlagIsSet      bool
 
 	// Help flag. Exposed for user customisation.
 	HelpFlag *FlagClause
@@ -75,7 +76,7 @@ func New(name, help string) *Application {
 	a.flagGroup = newFlagGroup()
 	a.argGroup = newArgGroup()
 	a.cmdGroup = newCmdGroup(a)
-	a.HelpFlag = a.Flag("help", "Show context-sensitive help")
+	a.HelpFlag = a.Flag("help", "Show context-sensitive help").IsSetByUser(&a.helpFlagIsSet)
 	a.HelpFlag.UnNegatableBool()
 
 	a.Flag("help-long", "Generate long help.").Hidden().PreAction(a.generateLongHelp).UnNegatableBool()

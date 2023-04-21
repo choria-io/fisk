@@ -127,10 +127,13 @@ Commands:
 Flags:
 {{.Context.SelectedCommand.Flags|FlagsToTwoColumns|FormatTwoColumns}}
 {{end -}}
-{{else -}}
-{{if .Context.Flags|VisibleFlags -}}
+{{end -}}
+{{if GlobalFlags .Context|VisibleFlags -}}
+{{if .HelpFlagIsSet -}}
 Global Flags:
-{{.Context.Flags|FlagsToTwoColumns|FormatTwoColumns}}
+{{ GlobalFlags .Context|FlagsToTwoColumns|FormatTwoColumns}}
+{{else -}}
+Pass --help to see global flags applicable to this command.
 {{end -}}
 {{end -}}
 `
