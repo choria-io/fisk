@@ -20,7 +20,7 @@ var (
 )
 
 type FlagGroupModel struct {
-	Flags []*FlagModel
+	Flags []*FlagModel `json:"flags"`
 }
 
 func (f *FlagGroupModel) FlagSummary() string {
@@ -51,15 +51,20 @@ func (f *FlagGroupModel) FlagSummary() string {
 }
 
 type FlagModel struct {
-	Name        string
-	Help        string
-	Short       rune
-	Default     []string
-	Envar       string
-	PlaceHolder string
-	Required    bool
-	Hidden      bool
-	Value       Value
+	Name        string   `json:"name"`
+	Help        string   `json:"help"`
+	Short       rune     `json:"short"`
+	Default     []string `json:"default"`
+	Envar       string   `json:"envar"`
+	PlaceHolder string   `json:"place_holder"`
+	Required    bool     `json:"required"`
+	Hidden      bool     `json:"hidden"`
+
+	// used by plugin model
+	Boolean   bool `json:"boolean"`
+	Negatable bool `json:"negatable"`
+
+	Value Value `json:"-"`
 }
 
 func (f *FlagModel) String() string {
@@ -103,7 +108,7 @@ func (f *FlagModel) HelpWithEnvar() string {
 }
 
 type ArgGroupModel struct {
-	Args []*ArgModel
+	Args []*ArgModel `json:"args"`
 }
 
 func (a *ArgGroupModel) ArgSummary() string {
@@ -134,14 +139,14 @@ func (a *ArgModel) HelpWithEnvar() string {
 }
 
 type ArgModel struct {
-	Name        string
-	Help        string
-	Default     []string
-	Envar       string
-	PlaceHolder string
-	Required    bool
-	Hidden      bool
-	Value       Value
+	Name        string   `json:"name"`
+	Help        string   `json:"help"`
+	Default     []string `json:"default"`
+	Envar       string   `json:"envar"`
+	PlaceHolder string   `json:"place_holder"`
+	Required    bool     `json:"required"`
+	Hidden      bool     `json:"hidden"`
+	Value       Value    `json:"-"`
 }
 
 func (a *ArgModel) String() string {
@@ -153,7 +158,7 @@ func (a *ArgModel) String() string {
 }
 
 type CmdGroupModel struct {
-	Commands []*CmdModel
+	Commands []*CmdModel `json:"commands"`
 }
 
 func (c *CmdGroupModel) FlattenedCommands() (out []*CmdModel) {
@@ -167,14 +172,14 @@ func (c *CmdGroupModel) FlattenedCommands() (out []*CmdModel) {
 }
 
 type CmdModel struct {
-	Name        string
-	Aliases     []string
-	Help        string
-	HelpLong    string
-	FullCommand string
-	Depth       int
-	Hidden      bool
-	Default     bool
+	Name        string   `json:"name"`
+	Aliases     []string `json:"aliases"`
+	Help        string   `json:"help"`
+	HelpLong    string   `json:"help_long"`
+	FullCommand string   `json:"-"`
+	Depth       int      `json:"-"`
+	Hidden      bool     `json:"hidden"`
+	Default     bool     `json:"default"`
 
 	*FlagGroupModel
 	*ArgGroupModel
@@ -186,13 +191,13 @@ func (c *CmdModel) String() string {
 }
 
 type ApplicationModel struct {
-	Name      string
-	Help      string
-	Cheat     string
-	Version   string
-	Author    string
-	Cheats    map[string]string
-	CheatTags []string
+	Name      string            `json:"name"`
+	Help      string            `json:"help"`
+	Cheat     string            `json:"cheat"`
+	Version   string            `json:"version"`
+	Author    string            `json:"author"`
+	Cheats    map[string]string `json:"cheats"`
+	CheatTags []string          `json:"cheat_tags"`
 
 	*ArgGroupModel
 	*CmdGroupModel
@@ -243,7 +248,7 @@ func (f *flagGroup) Model() *FlagGroupModel {
 }
 
 func (f *FlagClause) Model() *FlagModel {
-	return &FlagModel{
+	m := &FlagModel{
 		Name:        f.name,
 		Help:        f.help,
 		Short:       f.shorthand,
@@ -254,6 +259,11 @@ func (f *FlagClause) Model() *FlagModel {
 		Hidden:      f.hidden,
 		Value:       f.value,
 	}
+
+	m.Boolean = m.IsBoolFlag()
+	m.Negatable = m.IsNegatable()
+
+	return m
 }
 
 func (c *cmdGroup) Model() *CmdGroupModel {

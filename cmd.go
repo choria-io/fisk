@@ -225,15 +225,16 @@ type CmdClauseValidator func(*CmdClause) error
 // and either subcommands or positional arguments.
 type CmdClause struct {
 	cmdMixin
-	app            *Application
-	name           string
-	aliases        []string
-	help           string
-	helpLong       string
-	isDefault      bool
-	validator      CmdClauseValidator
-	hidden         bool
-	completionAlts []string
+	app             *Application
+	name            string
+	aliases         []string
+	help            string
+	helpLong        string
+	isDefault       bool
+	validator       CmdClauseValidator
+	hidden          bool
+	completionAlts  []string
+	pluginDelegator *pluginDelegator
 }
 
 func newCommand(app *Application, name, help string) *CmdClause {
