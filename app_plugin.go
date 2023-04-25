@@ -34,7 +34,7 @@ func (a *Application) introspectModel() *ApplicationModel {
 
 	var nc []*CmdModel
 	for _, cmd := range model.Commands {
-		if cmd.Name == "help" {
+		if cmd.Name == "help" || cmd.Name == "cheat" {
 			continue
 		}
 		nc = append(nc, cmd)
@@ -129,6 +129,7 @@ func (c *CmdClause) addCommandsFromModel(model *CmdGroupModel) {
 		cm.helpLong = cmd.HelpLong
 		cm.hidden = cmd.Hidden
 		cm.isDefault = cmd.Default
+
 		cm.addArgsFromModel(cmd.ArgGroupModel)
 		cm.addFlagsFromModel(cmd.FlagGroupModel, nil)
 		cm.addCommandsFromModel(cmd.CmdGroupModel)
@@ -207,6 +208,16 @@ func (a *Application) registerPluginModel(command string, model *ApplicationMode
 		boolFlags:      map[string]*bool{},
 		unNegBoolFlags: map[string]*bool{},
 		globalFlags:    a.flagGroup,
+	}
+
+	for k, v := range model.Cheats {
+		_, ok := a.cheats[k]
+		if ok {
+			continue
+		}
+
+		a.cheats[k] = v
+		a.cheatTags = append(a.cheatTags, k)
 	}
 
 	cmd.addArgsFromModel(model.ArgGroupModel)
