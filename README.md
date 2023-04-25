@@ -40,6 +40,9 @@ and the usage will show these negatable booleans.
 Often though one does not want to have the negatable version of a boolean added, with fisk you can achieve this using
 our `UnNegatableBool()` which would just be the basic boolean flag with no negatable version.
 
+Arguably `Bool()` should be un-negatable and we should have added a `NagatableBool()` but the decision was made to keep
+existing apps backward compatible.
+
 ### Cheats
 
 I really like [cheat](https://github.com/cheat/cheat), a great little tool that gives access to bite-sized hints on what's great about a CLI tool.
@@ -88,3 +91,38 @@ Available Cheats:
 
 You can save your cheats to a directory of your choice with `nats cheat --save /some/dir`, the directory
 must not already exist.
+
+## External Plugins
+
+Often one wants to make a CLI tool that can be extended using plugins.  Think for example the `nats` CLI that is built
+using `fisk`, it may want to add some commercial offering-specific commands that appear in the `nats` command as a fully
+native built-in command.
+
+**NOTE:** This is an experimental feature that will see some iteration in the short term future.
+
+Fisk `0.5.0` supports extending itself at run-time in this manner and any application built using this version of fisk
+can be plugged into another fisk application.
+
+The host application need to do some work but the ones being embedded will just work.
+
+```go
+app := fisk.New("nats", "NATS Utility")
+
+// now load your plugin models from disk and extend the command
+model := loadModelJson("ngs")
+
+app.ExternalPluginCommand("/opt/nats/bin/ngs", model)
+```
+
+The `model` above can be obtained by running a `fisk` built command with `--fisk-introspect` flag.
+
+The idea is that you would detect and register new plugins into your tool, you would call them once with the introspect
+flag and cache that model.  All future startups would embed this command - here `nats ngs` - right into the command flow.
+
+The model is our [ApplicationModel](https://pkg.go.dev/github.com/choria-io/fisk#ApplicationModel). Plugins written in
+other languages or using other CLI frameworks would need to emit a compatible model.
+
+Care should be taken not to have clashes with the top level global flags of the app you are embedding into, but if you
+do have a clash the value will be passed from top level into your app invocation.  This should be good enough for most
+cases but could leed to some unexpected results when you might have a different concept of what a flag means than the one
+you are embedded into.
