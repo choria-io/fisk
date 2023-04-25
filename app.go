@@ -85,6 +85,7 @@ func New(name, help string) *Application {
 	a.Flag("completion-bash", "Output possible completions for the given args.").Hidden().UnNegatableBoolVar(&a.completion)
 	a.Flag("completion-script-bash", "Generate completion script for bash.").Hidden().PreAction(a.generateBashCompletionScript).UnNegatableBool()
 	a.Flag("completion-script-zsh", "Generate completion script for ZSH.").Hidden().PreAction(a.generateZSHCompletionScript).UnNegatableBool()
+	a.Flag("fisk-introspect", "Introspect the application model").Hidden().Action(a.introspectAction).UnNegatableBool()
 
 	return a
 }
