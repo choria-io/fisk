@@ -16,11 +16,12 @@ var (
 		"completion-bash":        true,
 		"completion-script-bash": true,
 		"completion-script-zsh":  true,
+		"fisk-introspect":        true,
 	}
 )
 
 type FlagGroupModel struct {
-	Flags []*FlagModel `json:"flags"`
+	Flags []*FlagModel `json:"flags,omitempty"`
 }
 
 func (f *FlagGroupModel) FlagSummary() string {
@@ -53,16 +54,17 @@ func (f *FlagGroupModel) FlagSummary() string {
 type FlagModel struct {
 	Name        string   `json:"name"`
 	Help        string   `json:"help"`
-	Short       rune     `json:"short"`
-	Default     []string `json:"default"`
-	Envar       string   `json:"envar"`
-	PlaceHolder string   `json:"place_holder"`
-	Required    bool     `json:"required"`
-	Hidden      bool     `json:"hidden"`
+	Short       rune     `json:"short,omitempty"`
+	Default     []string `json:"default,omitempty"`
+	Envar       string   `json:"envar,omitempty"`
+	PlaceHolder string   `json:"place_holder,omitempty"`
+	Required    bool     `json:"required,omitempty"`
+	Hidden      bool     `json:"hidden,omitempty"`
 
 	// used by plugin model
-	Boolean   bool `json:"boolean"`
-	Negatable bool `json:"negatable"`
+	Boolean    bool `json:"boolean"`
+	Negatable  bool `json:"negatable,omitempty"`
+	Cumulative bool `json:"cumulative"`
 
 	Value Value `json:"-"`
 }
@@ -72,6 +74,19 @@ func (f *FlagModel) String() string {
 		return ""
 	}
 	return f.Value.String()
+}
+
+func (f *FlagModel) IsCumulative() bool {
+	if f.Value == nil {
+		return false
+	}
+
+	v, ok := f.Value.(repeatableFlag)
+	if !ok {
+		return false
+	}
+
+	return v.IsCumulative()
 }
 
 func (f *FlagModel) IsBoolFlag() bool {
@@ -108,7 +123,7 @@ func (f *FlagModel) HelpWithEnvar() string {
 }
 
 type ArgGroupModel struct {
-	Args []*ArgModel `json:"args"`
+	Args []*ArgModel `json:"args,omitempty"`
 }
 
 func (a *ArgGroupModel) ArgSummary() string {
@@ -141,12 +156,28 @@ func (a *ArgModel) HelpWithEnvar() string {
 type ArgModel struct {
 	Name        string   `json:"name"`
 	Help        string   `json:"help"`
-	Default     []string `json:"default"`
-	Envar       string   `json:"envar"`
-	PlaceHolder string   `json:"place_holder"`
-	Required    bool     `json:"required"`
-	Hidden      bool     `json:"hidden"`
+	Default     []string `json:"default,omitempty"`
+	Envar       string   `json:"envar,omitempty"`
+	PlaceHolder string   `json:"place_holder,omitempty"`
+	Required    bool     `json:"required,omitempty"`
+	Hidden      bool     `json:"hidden,omitempty"`
 	Value       Value    `json:"-"`
+
+	// used by plugin model
+	Cumulative bool `json:"cumulative"`
+}
+
+func (a *ArgModel) IsCumulative() bool {
+	if a.Value == nil {
+		return false
+	}
+
+	v, ok := a.Value.(remainderArg)
+	if !ok {
+		return false
+	}
+
+	return v.IsCumulative()
 }
 
 func (a *ArgModel) String() string {
@@ -158,7 +189,7 @@ func (a *ArgModel) String() string {
 }
 
 type CmdGroupModel struct {
-	Commands []*CmdModel `json:"commands"`
+	Commands []*CmdModel `json:"commands,omitempty"`
 }
 
 func (c *CmdGroupModel) FlattenedCommands() (out []*CmdModel) {
@@ -173,13 +204,13 @@ func (c *CmdGroupModel) FlattenedCommands() (out []*CmdModel) {
 
 type CmdModel struct {
 	Name        string   `json:"name"`
-	Aliases     []string `json:"aliases"`
+	Aliases     []string `json:"aliases,omitempty"`
 	Help        string   `json:"help"`
-	HelpLong    string   `json:"help_long"`
+	HelpLong    string   `json:"help_long,omitempty"`
 	FullCommand string   `json:"-"`
 	Depth       int      `json:"-"`
-	Hidden      bool     `json:"hidden"`
-	Default     bool     `json:"default"`
+	Hidden      bool     `json:"hidden,omitempty"`
+	Default     bool     `json:"default,omitempty"`
 
 	*FlagGroupModel
 	*ArgGroupModel
@@ -193,11 +224,11 @@ func (c *CmdModel) String() string {
 type ApplicationModel struct {
 	Name      string            `json:"name"`
 	Help      string            `json:"help"`
-	Cheat     string            `json:"cheat"`
-	Version   string            `json:"version"`
-	Author    string            `json:"author"`
-	Cheats    map[string]string `json:"cheats"`
-	CheatTags []string          `json:"cheat_tags"`
+	Cheat     string            `json:"cheat,omitempty"`
+	Version   string            `json:"version,omitempty"`
+	Author    string            `json:"author,omitempty"`
+	Cheats    map[string]string `json:"cheats,omitempty"`
+	CheatTags []string          `json:"cheat_tags,omitempty"`
 
 	*ArgGroupModel
 	*CmdGroupModel
@@ -227,7 +258,7 @@ func (a *argGroup) Model() *ArgGroupModel {
 }
 
 func (a *ArgClause) Model() *ArgModel {
-	return &ArgModel{
+	m := &ArgModel{
 		Name:        a.name,
 		Help:        a.help,
 		Default:     a.defaultValues,
@@ -237,6 +268,10 @@ func (a *ArgClause) Model() *ArgModel {
 		Hidden:      a.hidden,
 		Value:       a.value,
 	}
+
+	m.Cumulative = m.IsCumulative()
+
+	return m
 }
 
 func (f *flagGroup) Model() *FlagGroupModel {
@@ -262,6 +297,7 @@ func (f *FlagClause) Model() *FlagModel {
 
 	m.Boolean = m.IsBoolFlag()
 	m.Negatable = m.IsNegatable()
+	m.Cumulative = m.IsCumulative()
 
 	return m
 }
