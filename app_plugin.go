@@ -34,7 +34,7 @@ func (a *Application) introspectModel() *ApplicationModel {
 
 	var nc []*CmdModel
 	for _, cmd := range model.Commands {
-		if cmd.Name == "help" || cmd.Name == "cheat" {
+		if cmd.Name == "help" || cmd.Name == "cheat" || cmd.Name == "help_long" {
 			continue
 		}
 		nc = append(nc, cmd)
