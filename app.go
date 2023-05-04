@@ -243,7 +243,6 @@ func (a *Application) Parse(args []string) (command string, err error) {
 	if err = a.applyPreActions(context, !a.completion); err != nil {
 		return "", err
 	}
-
 	if a.completion {
 		a.generateBashCompletion(context)
 		a.terminate(0)
@@ -934,7 +933,19 @@ func (a *Application) completionOptions(context *ParseContext) []string {
 
 func (a *Application) generateBashCompletion(context *ParseContext) {
 	options := a.completionOptions(context)
-	fmt.Printf("%s", strings.Join(options, "\n"))
+	opt1String := strings.Join(options, "\n")
+
+	// Re-parse the command-line ignoring defaults to find what if we did not set defaults
+	context, _ = a.parseContext(true, context.rawArgs)
+	opt2String := strings.Join(a.completionOptions(context), "\n")
+	if opt1String == "" {
+		fmt.Printf("%s", opt2String)
+	} else if opt2String != opt1String {
+		fmt.Printf("%s\n%s", opt1String, opt2String)
+	} else {
+		fmt.Printf("%s", opt1String)
+	}
+
 }
 
 func envarTransform(name string) string {
