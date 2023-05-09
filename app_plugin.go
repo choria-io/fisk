@@ -18,6 +18,9 @@ type pluginDelegator struct {
 	cumuArgs       map[string]*[]string
 	proxyGlobals   []string
 	globalFlags    *flagGroup
+	flagsIsSet     map[string]*bool
+	parent         string
+	name           string
 }
 
 func (a *Application) introspectModel() *ApplicationModel {
@@ -101,6 +104,9 @@ func (c *CmdClause) addFlagsFromModel(model *FlagGroupModel, appFlags *FlagGroup
 		f.required = flag.Required
 		f.hidden = flag.Hidden
 
+		c.pluginDelegator.flagsIsSet[flag.Name] = func() *bool { v := false; return &v }()
+		f.setByUser = c.pluginDelegator.flagsIsSet[flag.Name]
+
 		switch {
 		case flag.Boolean && flag.Negatable:
 			c.pluginDelegator.boolFlags[flag.Name] = f.Bool()
@@ -117,91 +123,131 @@ func (c *CmdClause) addFlagsFromModel(model *FlagGroupModel, appFlags *FlagGroup
 	}
 }
 
+func (c *CmdClause) pluginAction(pd *pluginDelegator) Action {
+	return func(pc *ParseContext) error {
+		parts := strings.Split(pc.SelectedCommand.FullCommand(), " ")
+		args := parts[1:]
+
+		for k, v := range pd.args {
+			if v != nil && *v != "" {
+				args = append(args, fmt.Sprintf("%s=%s", k, *v))
+			}
+		}
+
+		for k, v := range pd.flags {
+			if v != nil && *pd.flagsIsSet[k] {
+				args = append(args, fmt.Sprintf("--%s=%s", k, *v))
+			}
+		}
+
+		for k, v := range pd.cumuFlags {
+			if v == nil {
+				continue
+			}
+
+			for _, cv := range *v {
+				if v != nil && *pd.flagsIsSet[k] {
+					args = append(args, fmt.Sprintf("--%s=%s", k, cv))
+				}
+			}
+		}
+
+		for k, v := range pd.boolFlags {
+			if !*pd.flagsIsSet[k] {
+				continue
+			}
+
+			if *v {
+				args = append(args, fmt.Sprintf("--%s", k))
+			} else {
+				args = append(args, fmt.Sprintf("--no-%s", k))
+			}
+		}
+
+		for k, v := range pd.unNegBoolFlags {
+			if !*pd.flagsIsSet[k] {
+				continue
+			}
+
+			if *v {
+				args = append(args, fmt.Sprintf("--%s", k))
+			}
+		}
+
+		for _, f := range pd.proxyGlobals {
+			args = append(args, fmt.Sprintf("--%s=%s", f, pd.globalFlags.long[f].value.String()))
+		}
+
+		// must be last
+		for _, v := range pd.cumuArgs {
+			if v != nil {
+				for _, i := range *v {
+					if i != "" {
+						args = append(args, i)
+					}
+				}
+			}
+		}
+
+		if os.Getenv("FISK_DEBUG") != "" {
+			fmt.Printf("Fisk Plugin Running: %s %s\n", pd.command, strings.Join(args, " "))
+			fmt.Printf("PD: %#v\n", pd)
+		}
+
+		cmd := exec.Command(pd.command, args...)
+		cmd.Stdout = os.Stdout
+		cmd.Stderr = os.Stderr
+		cmd.Stdin = os.Stdin
+		cmd.Env = os.Environ()
+		return cmd.Run()
+	}
+}
+
 func (c *CmdClause) addCommandsFromModel(model *CmdGroupModel) {
 	if model == nil {
 		return
 	}
 
 	for _, cmd := range model.Commands {
+		pd := pluginDelegator{
+			parent:         c.name,
+			name:           cmd.Name,
+			command:        c.pluginDelegator.command,
+			flags:          map[string]*string{},
+			flagsIsSet:     map[string]*bool{},
+			cumuFlags:      map[string]*[]string{},
+			args:           map[string]*string{},
+			cumuArgs:       map[string]*[]string{},
+			boolFlags:      map[string]*bool{},
+			unNegBoolFlags: map[string]*bool{},
+			globalFlags:    c.pluginDelegator.globalFlags,
+		}
+
 		cm := c.Command(cmd.Name, cmd.Help)
-		cm.pluginDelegator = c.pluginDelegator
+		cm.pluginDelegator = &pd
+
 		cm.aliases = cmd.Aliases
 		cm.helpLong = cmd.HelpLong
 		cm.hidden = cmd.Hidden
 		cm.isDefault = cmd.Default
 
+		if cmd.CmdGroupModel == nil || len(cmd.CmdGroupModel.Commands) == 0 {
+			cm.Action(cm.pluginAction(&pd))
+		}
+
 		cm.addArgsFromModel(cmd.ArgGroupModel)
 		cm.addFlagsFromModel(cmd.FlagGroupModel, nil)
 		cm.addCommandsFromModel(cmd.CmdGroupModel)
-		cm.Action(func(pc *ParseContext) error {
-			parts := strings.Split(pc.SelectedCommand.FullCommand(), " ")
-			args := parts[1:]
-
-			for k, v := range cm.pluginDelegator.args {
-				if v != nil {
-					args = append(args, fmt.Sprintf("%s=%s", k, *v))
-				}
-			}
-
-			for k, v := range cm.pluginDelegator.flags {
-				if v != nil {
-					args = append(args, fmt.Sprintf("--%s=%s", k, *v))
-				}
-			}
-
-			for k, v := range cm.pluginDelegator.cumuFlags {
-				if v == nil {
-					continue
-				}
-
-				for _, cv := range *v {
-					args = append(args, fmt.Sprintf("--%s=%s", k, cv))
-				}
-			}
-
-			for k, v := range cm.pluginDelegator.boolFlags {
-				if *v {
-					args = append(args, fmt.Sprintf("--%s", k))
-				} else {
-					args = append(args, fmt.Sprintf("--no-%s", k))
-				}
-			}
-
-			for k, v := range cm.pluginDelegator.unNegBoolFlags {
-				if *v {
-					args = append(args, fmt.Sprintf("--%s", k))
-				}
-			}
-
-			for _, f := range cm.pluginDelegator.proxyGlobals {
-				args = append(args, fmt.Sprintf("--%s=%s", f, cm.pluginDelegator.globalFlags.long[f].value.String()))
-			}
-
-			// must be last
-			for _, v := range cm.pluginDelegator.cumuArgs {
-				if v != nil {
-					args = append(args, *v...)
-				}
-			}
-
-			if os.Getenv("FISK_DEBUG") != "" {
-				fmt.Printf("Fisk Plugin Running: %s %s\n", cm.pluginDelegator.command, strings.Join(args, " "))
-			}
-			cmd := exec.Command(cm.pluginDelegator.command, args...)
-			cmd.Stdout = os.Stdout
-			cmd.Stderr = os.Stderr
-			cmd.Stdin = os.Stdin
-			cmd.Env = os.Environ()
-			return cmd.Run()
-		})
 	}
 }
 
 func (a *Application) registerPluginModel(command string, model *ApplicationModel) (*CmdClause, error) {
 	cmd := a.Command(model.Name, model.Help)
 	cmd.pluginDelegator = &pluginDelegator{
+		parent:         a.Name,
 		command:        command,
 		flags:          map[string]*string{},
+		flagsIsSet:     map[string]*bool{},
 		cumuFlags:      map[string]*[]string{},
 		args:           map[string]*string{},
 		cumuArgs:       map[string]*[]string{},
