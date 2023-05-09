@@ -27,7 +27,7 @@ func (a *Application) introspectModel() *ApplicationModel {
 	model := a.Model()
 	var nf []*FlagModel
 	for _, flag := range model.Flags {
-		if flag.Name == "help" || strings.HasPrefix(flag.Name, "help-") || strings.HasPrefix(flag.Name, "completion-") || strings.HasPrefix(flag.Name, "fisk-") {
+		if flag.Name == "help" || strings.HasPrefix(flag.Name, "help-") || strings.HasPrefix(flag.Name, "completion-") || strings.HasPrefix(flag.Name, "fisk-") || flag.Name == "version" {
 			continue
 		}
 
@@ -91,7 +91,10 @@ func (c *CmdClause) addFlagsFromModel(model *FlagGroupModel, appFlags *FlagGroup
 	}
 
 	for _, flag := range model.Flags {
-		if _, ok := c.pluginDelegator.globalFlags.long[flag.Name]; ok {
+		c.pluginDelegator.flagsIsSet[flag.Name] = func() *bool { v := false; return &v }()
+
+		if f, ok := c.pluginDelegator.globalFlags.long[flag.Name]; ok {
+			f.setByUser = c.pluginDelegator.flagsIsSet[flag.Name]
 			c.pluginDelegator.proxyGlobals = append(c.pluginDelegator.proxyGlobals, flag.Name)
 			continue
 		}
@@ -104,7 +107,6 @@ func (c *CmdClause) addFlagsFromModel(model *FlagGroupModel, appFlags *FlagGroup
 		f.required = flag.Required
 		f.hidden = flag.Hidden
 
-		c.pluginDelegator.flagsIsSet[flag.Name] = func() *bool { v := false; return &v }()
 		f.setByUser = c.pluginDelegator.flagsIsSet[flag.Name]
 
 		switch {
@@ -128,9 +130,9 @@ func (c *CmdClause) pluginAction(pd *pluginDelegator) Action {
 		parts := strings.Split(pc.SelectedCommand.FullCommand(), " ")
 		args := parts[1:]
 
-		for k, v := range pd.args {
+		for _, v := range pd.args {
 			if v != nil && *v != "" {
-				args = append(args, fmt.Sprintf("%s=%s", k, *v))
+				args = append(args, *v)
 			}
 		}
 
@@ -175,6 +177,10 @@ func (c *CmdClause) pluginAction(pd *pluginDelegator) Action {
 		}
 
 		for _, f := range pd.proxyGlobals {
+			if !*pd.flagsIsSet[f] {
+				continue
+			}
+
 			args = append(args, fmt.Sprintf("--%s=%s", f, pd.globalFlags.long[f].value.String()))
 		}
 
@@ -212,15 +218,16 @@ func (c *CmdClause) addCommandsFromModel(model *CmdGroupModel) {
 		pd := pluginDelegator{
 			parent:         c.name,
 			name:           cmd.Name,
-			command:        c.pluginDelegator.command,
 			flags:          map[string]*string{},
-			flagsIsSet:     map[string]*bool{},
 			cumuFlags:      map[string]*[]string{},
 			args:           map[string]*string{},
 			cumuArgs:       map[string]*[]string{},
 			boolFlags:      map[string]*bool{},
 			unNegBoolFlags: map[string]*bool{},
-			globalFlags:    c.pluginDelegator.globalFlags,
+			flagsIsSet:     c.pluginDelegator.flagsIsSet,   // shared with global so global flags isSet is also handled
+			command:        c.pluginDelegator.command,      // the command to run is always the same
+			globalFlags:    c.pluginDelegator.globalFlags,  // global flags are global
+			proxyGlobals:   c.pluginDelegator.proxyGlobals, // global flags are global
 		}
 
 		cm := c.Command(cmd.Name, cmd.Help)
