@@ -280,12 +280,19 @@ func (a *Application) registerPluginModel(command string, model *ApplicationMode
 	return cmd, nil
 }
 
-// ExternalPluginCommand extends the application using a plugin and a model describing the application
-func (a *Application) ExternalPluginCommand(command string, model json.RawMessage) (*CmdClause, error) {
+// ExternalPluginCommand extends the application using a plugin and a model describing the application, when name or help is not an empty string it will override that from the plugin
+func (a *Application) ExternalPluginCommand(command string, model json.RawMessage, name string, help string) (*CmdClause, error) {
 	var m ApplicationModel
 	err := json.Unmarshal(model, &m)
 	if err != nil {
 		return nil, err
+	}
+
+	if name != "" {
+		m.Name = name
+	}
+	if help != "" {
+		m.Help = help
 	}
 
 	if m.Name == "" {
