@@ -91,7 +91,10 @@ func (c *CmdClause) addFlagsFromModel(model *FlagGroupModel, appFlags *FlagGroup
 	}
 
 	for _, flag := range model.Flags {
-		c.pluginDelegator.flagsIsSet[flag.Name] = func() *bool { v := false; return &v }()
+		_, ok := c.pluginDelegator.flagsIsSet[flag.Name]
+		if !ok {
+			c.pluginDelegator.flagsIsSet[flag.Name] = func() *bool { v := false; return &v }()
+		}
 
 		if f, ok := c.pluginDelegator.globalFlags.long[flag.Name]; ok {
 			f.setByUser = c.pluginDelegator.flagsIsSet[flag.Name]
