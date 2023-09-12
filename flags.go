@@ -158,6 +158,7 @@ type FlagClause struct {
 	placeholder   string
 	hidden        bool
 	setByUser     *bool
+	validator     OptionValidator
 }
 
 func newFlag(name, help string) *FlagClause {
@@ -217,6 +218,11 @@ func (f *FlagClause) init() error {
 		return fmt.Errorf("invalid default for '--%s', expecting single value", f.name)
 	}
 	return nil
+}
+
+func (f *FlagClause) Validator(validator OptionValidator) *FlagClause {
+	f.validator = validator
+	return f
 }
 
 // Dispatch to the given function after the flag is parsed and validated.

@@ -199,7 +199,7 @@ func (p *parserMixin) Enums(options ...string) (target *[]string) {
 	return
 }
 
-// EnumVar allows a value from a set of options.
+// EnumsVar allows a value from a set of options.
 func (p *parserMixin) EnumsVar(target *[]string, options ...string) {
 	p.SetValue(newEnumsFlag(target, options...))
 }

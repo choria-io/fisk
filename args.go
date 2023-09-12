@@ -74,6 +74,7 @@ type ArgClause struct {
 	placeholder   string
 	hidden        bool
 	required      bool
+	validator     OptionValidator
 }
 
 func newArg(name, help string) *ArgClause {
@@ -125,6 +126,11 @@ func (a *ArgClause) consumesRemainder() bool {
 // Hidden hides the argument from usage but still allows it to be used.
 func (a *ArgClause) Hidden() *ArgClause {
 	a.hidden = true
+	return a
+}
+
+func (a *ArgClause) Validator(validator OptionValidator) *ArgClause {
+	a.validator = validator
 	return a
 }
 
