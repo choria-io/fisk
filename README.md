@@ -31,6 +31,7 @@ Some historical points in time are kept:
  * Extended parsing for durations that include weeks (`w`, `W`), months (`M`), years (`y`, `Y`) and days (`d`, `D`) units (`v0.1.3` or newer)
  * More contextually useful help when using `app.MustParseWithUsage(os.Args[1:])` (`v0.1.4` or newer)
  * Default usage template is `CompactMainUsageTemplate` since `v0.3.0` 
+ * Support per Flag and Argument validation since `v0.6.0`
 
 ### UnNegatableBool
 
@@ -91,6 +92,36 @@ Available Cheats:
 
 You can save your cheats to a directory of your choice with `nats cheat --save /some/dir`, the directory
 must not already exist.
+
+## Flag and Argument Validations
+
+To support a rich validation capability without the core fisk library having to implement it all we support passing
+in validators that operate on the string value given by the user
+
+Here is a Regular expression validator:
+
+```go
+func RegexValidator(pattern string) OptionValidator {
+    return func(value string) error {
+        ok, err := regexp.MatchString(pattern, value)
+        if err != nil {
+            return fmt.Errorf("invalid validation pattern %q: %w", pattern, err)
+        }
+
+        if !ok {
+            return fmt.Errorf("does not validate using %q", pattern)
+        }
+
+        return nil
+    }
+}
+```
+
+Use this on a Flag or Argument:
+
+```go
+app.Flag("name", "A object name consisting of alphanumeric characters").Validator(RegexValidator("^[a-zA-Z]+$")).StringVar(&val)
+```
 
 ## External Plugins
 

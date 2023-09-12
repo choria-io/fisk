@@ -17,7 +17,11 @@ var (
 	envarTransformRegexp = regexp.MustCompile(`[^a-zA-Z0-9_]+`)
 )
 
+// ApplicationValidator can be used to validate entire application during parsing
 type ApplicationValidator func(*Application) error
+
+// OptionValidator can be used to validate individual flags or arguments during parsing
+type OptionValidator func(string) error
 
 // An Application contains the definitions of flags, arguments and commands
 // for an application.
@@ -235,6 +239,10 @@ func (a *Application) Parse(args []string) (command string, err error) {
 	}
 
 	if err = a.setDefaults(context); err != nil {
+		return "", err
+	}
+
+	if err := a.validateFlagsAndArgs(context); err != nil {
 		return "", err
 	}
 
@@ -607,6 +615,50 @@ func (a *Application) execute(context *ParseContext, selected []string) (string,
 		return "", ErrCommandNotSpecified
 	}
 	return command, err
+}
+
+func (a *Application) validateFlagsAndArgs(context *ParseContext) error {
+	flagElements := map[string]*ParseElement{}
+	for _, element := range context.Elements {
+		if flag, ok := element.Clause.(*FlagClause); ok {
+			if flag.validator == nil {
+				return nil
+			}
+			flagElements[flag.name] = element
+		}
+	}
+
+	argElements := map[string]*ParseElement{}
+	for _, element := range context.Elements {
+		if arg, ok := element.Clause.(*ArgClause); ok {
+			if arg.validator == nil {
+				return nil
+			}
+			argElements[arg.name] = element
+		}
+	}
+
+	for _, flag := range flagElements {
+		clause := flag.Clause.(*FlagClause)
+		if clause.validator != nil {
+			err := clause.validator(*flag.Value)
+			if err != nil {
+				return fmt.Errorf("%s: %w", clause.name, err)
+			}
+		}
+	}
+
+	for _, arg := range argElements {
+		clause := arg.Clause.(*ArgClause)
+		if clause.validator != nil {
+			err := clause.validator(*arg.Value)
+			if err != nil {
+				return fmt.Errorf("%s: %w", clause.name, err)
+			}
+		}
+	}
+
+	return nil
 }
 
 func (a *Application) setDefaults(context *ParseContext) error {

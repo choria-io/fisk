@@ -2,8 +2,10 @@ package fisk
 
 import (
 	"bytes"
+	"fmt"
 	"io"
 	"os"
+	"regexp"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -389,6 +391,47 @@ func TestIsSetByUser(t *testing.T) {
 	assert.Error(t, err)
 	assert.True(t, isSet)
 	assert.False(t, isSet2)
+}
+
+func TestValidator(t *testing.T) {
+	regexpValidator := func(r string) OptionValidator {
+		return func(v string) error {
+			ok, err := regexp.MatchString(r, v)
+			if err != nil {
+				return err
+			}
+
+			if !ok {
+				return fmt.Errorf("does not validate using %q", r)
+			}
+
+			return nil
+		}
+	}
+
+	app := newTestApp()
+
+	arg := app.Arg("arg", "A arg").Default("a").Validator(regexpValidator("^[abc]$")).String()
+	flag := app.Flag("flag", "A flag").Validator(regexpValidator("^[xyz]$")).String()
+
+	_, err := app.Parse([]string{"--flag", "x"})
+	assert.NoError(t, err)
+	assert.Equal(t, *flag, "x")
+	assert.Equal(t, *arg, "a")
+
+	*arg = ""
+	*flag = ""
+	_, err = app.Parse([]string{"b", "--flag", "x"})
+	assert.NoError(t, err)
+	assert.Equal(t, *flag, "x")
+	assert.Equal(t, *arg, "b")
+
+	*arg = ""
+	*flag = ""
+	_, err = app.Parse([]string{"z", "--flag", "x"})
+	assert.Error(t, err, `does not validate using "^[abc]$"`)
+	assert.Equal(t, *flag, "")
+	assert.Equal(t, *arg, "")
 }
 
 func TestNegatableBool(t *testing.T) {
