@@ -715,13 +715,21 @@ func (a *Application) validateRequired(context *ParseContext) error {
 	}
 
 	// Check required flags and set defaults.
+	var neededFlags []string
 	for _, flag := range context.flags.long {
 		if flagElements[flag.name] == nil {
 			// Check required flags were provided.
 			if flag.needsValue() {
-				return fmt.Errorf("%w --%s not provided", ErrRequiredFlag, flag.name)
+				neededFlags = append(neededFlags, fmt.Sprintf("--%s", flag.name))
 			}
 		}
+	}
+
+	switch {
+	case len(neededFlags) == 1:
+		return fmt.Errorf("%w %s not provided", ErrRequiredFlag, neededFlags[0])
+	case len(neededFlags) > 1:
+		return fmt.Errorf("%ws %s not provided", ErrRequiredFlag, strings.Join(neededFlags, ", "))
 	}
 
 	for _, arg := range context.arguments.args {
