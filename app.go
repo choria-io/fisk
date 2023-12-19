@@ -44,6 +44,7 @@ type Application struct {
 	noInterspersed     bool             // can flags be interspersed with args (or must they come first)
 	defaultEnvars      bool
 	completion         bool
+	introspect         bool
 	cheats             map[string]string
 	cheatTags          []string
 	helpFlagIsSet      bool
@@ -89,7 +90,7 @@ func New(name, help string) *Application {
 	a.Flag("completion-bash", "Output possible completions for the given args.").Hidden().UnNegatableBoolVar(&a.completion)
 	a.Flag("completion-script-bash", "Generate completion script for bash.").Hidden().PreAction(a.generateBashCompletionScript).UnNegatableBool()
 	a.Flag("completion-script-zsh", "Generate completion script for ZSH.").Hidden().PreAction(a.generateZSHCompletionScript).UnNegatableBool()
-	a.Flag("fisk-introspect", "Introspect the application model").Hidden().Action(a.introspectAction).UnNegatableBool()
+	a.Flag("fisk-introspect", "Introspect the application model").Hidden().Action(a.introspectAction).UnNegatableBoolVar(&a.introspect)
 
 	return a
 }
@@ -254,6 +255,9 @@ func (a *Application) Parse(args []string) (command string, err error) {
 
 	if a.completion {
 		a.generateBashCompletion(context)
+		a.terminate(0)
+	} else if a.introspect {
+		a.introspectAction(context)
 		a.terminate(0)
 	} else {
 		if parseErr != nil {

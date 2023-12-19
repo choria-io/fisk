@@ -584,9 +584,21 @@ var docFS embed.FS
 
 func TestCheatFile(t *testing.T) {
 	c := newTestApp().CheatFile(docFS, "", "doc.go")
+
 	c.Command("x", "x").CheatFile(docFS, "y", "doc.go")
 	assert.Contains(t, c.cheats["test"], "Package fisk provides")
 	assert.Contains(t, c.cheats["y"], "Package fisk provides")
+
+}
+
+func TestFiskIntrospect(t *testing.T) {
+	var buf bytes.Buffer
+	c := newTestApp()
+	c.usageWriter = &buf
+	c.errorWriter = &buf
+	c.Flag("required", "required").Required().String()
+	c.MustParseWithUsage([]string{"--fisk-introspect"})
+	assert.NotContains(t, buf.String(), "required flag --required not provided")
 }
 
 func TestParseWithUsage(t *testing.T) {
