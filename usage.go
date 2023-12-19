@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"fmt"
 	"go/doc"
+	"go/doc/comment"
 	"io"
 	"strings"
 	"text/template"
@@ -33,7 +34,14 @@ func formatTwoColumns(w io.Writer, indent, padding, width int, rows [][2]string)
 
 	for _, row := range rows {
 		buf := bytes.NewBuffer(nil)
-		doc.ToText(buf, row[1], "", preIndent, width-s-padding-indent)
+		d := new(doc.Package).Parser().Parse(row[1])
+		pr := &comment.Printer{
+			TextPrefix:     "",
+			TextCodePrefix: preIndent,
+			TextWidth:      width - s - padding - indent,
+		}
+		buf.Write(pr.Text(d))
+
 		lines := strings.Split(strings.TrimRight(buf.String(), "\n"), "\n")
 		fmt.Fprintf(w, "%s%-*s%*s", indentStr, s, row[0], padding, "")
 		if len(row[0]) >= max {
@@ -134,7 +142,15 @@ func (a *Application) UsageForContextWithTemplate(context *ParseContext, indent 
 		"Wrap": func(indent int, s string) string {
 			buf := bytes.NewBuffer(nil)
 			indentText := strings.Repeat(" ", indent)
-			doc.ToText(buf, s, indentText, "  "+indentText, width-indent)
+
+			d := new(doc.Package).Parser().Parse(s)
+			pr := &comment.Printer{
+				TextPrefix:     indentText,
+				TextCodePrefix: "  " + indentText,
+				TextWidth:      width - indent,
+			}
+			buf.Write(pr.Text(d))
+
 			return buf.String()
 		},
 		"FormatFlag": formatFlag,
