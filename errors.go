@@ -35,4 +35,7 @@ var (
 
 	// ErrUnexpectedArgument indicates an unexpected argument was encountered
 	ErrUnexpectedArgument = errors.New("unexpected argument")
+
+	// ErrDuplicateCommand indicates that a command was defined multiple times
+	ErrDuplicateCommand = errors.New("duplicate command")
 )
