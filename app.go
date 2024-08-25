@@ -906,7 +906,7 @@ func (a *Application) MustParseWithUsage(args []string) (command string) {
 		fmt.Fprintf(a.errorWriter, "error: %v, use --help for full help including flags and arguments\n\n", err)
 		ut = a.errorUsageTemplate
 
-	case errorIs(err, ErrRequiredArgument, ErrRequiredFlag, ErrUnknownLongFlag, ErrUnknownShortFlag, ErrExpectedFlagArgument, ErrFlagCannotRepeat, ErrUnexpectedArgument):
+	case errorIs(err, ErrRequiredArgument, ErrRequiredFlag, ErrUnknownLongFlag, ErrUnknownShortFlag, ErrExpectedFlagArgument, ErrFlagCannotRepeat, ErrUnexpectedArgument, ErrDuplicateCommand):
 		fmt.Fprintf(a.errorWriter, "error: %v\n\n", err)
 
 	default:

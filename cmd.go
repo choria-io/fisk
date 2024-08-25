@@ -196,7 +196,7 @@ func (c *cmdGroup) init() error {
 			defaults = append(defaults, cmd.name)
 		}
 		if seen[cmd.name] {
-			return fmt.Errorf("duplicate command %q", cmd.name)
+			return fmt.Errorf("%w %q", ErrDuplicateCommand, cmd.name)
 		}
 		seen[cmd.name] = true
 		for _, alias := range cmd.aliases {
