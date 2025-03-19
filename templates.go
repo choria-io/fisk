@@ -127,6 +127,9 @@ Commands:
 Flags:
 {{.Context.SelectedCommand.Flags|FlagsToTwoColumns|FormatTwoColumns}}
 {{end -}}
+{{ if len .Context.SelectedCommand.Aliases -}}
+Command Aliases: {{ .Context.SelectedCommand.Aliases | Join }}
+{{end }}
 {{end -}}
 {{if GlobalFlags .Context|VisibleFlags -}}
 {{if .HelpFlagIsSet -}}

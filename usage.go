@@ -136,6 +136,7 @@ func (a *Application) UsageForContext(context *ParseContext) error {
 func (a *Application) UsageForContextWithTemplate(context *ParseContext, indent int, tmpl string) error {
 	width := guessWidth(a.usageWriter)
 	funcs := template.FuncMap{
+		"Join": func(items []string) string { return strings.Join(items, ", ") },
 		"Indent": func(level int) string {
 			return strings.Repeat(" ", level*indent)
 		},
