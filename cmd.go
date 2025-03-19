@@ -237,6 +237,10 @@ type CmdClause struct {
 	pluginDelegator *pluginDelegator
 }
 
+func (c *CmdClause) Aliases() []string {
+	return c.aliases
+}
+
 func newCommand(app *Application, name, help string) *CmdClause {
 	c := &CmdClause{
 		app:  app,
