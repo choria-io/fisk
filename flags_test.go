@@ -369,7 +369,7 @@ func TestCombinationEnumOptions(t *testing.T) {
 
 }
 
-func TestIsSetByUser(t *testing.T) {
+func TestFlagIsSetByUser(t *testing.T) {
 	app := newTestApp()
 	var isSet bool
 	b := app.Flag("b", "").IsSetByUser(&isSet).Bool()

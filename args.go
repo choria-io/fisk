@@ -75,6 +75,7 @@ type ArgClause struct {
 	hidden        bool
 	required      bool
 	validator     OptionValidator
+	setByUser     *bool
 }
 
 func newArg(name, help string) *ArgClause {
@@ -145,6 +146,21 @@ func (a *ArgClause) PlaceHolder(value string) *ArgClause {
 func (a *ArgClause) Required() *ArgClause {
 	a.required = true
 	return a
+}
+
+// IsSetByUser let to know if the flag was set by the user
+func (a *ArgClause) IsSetByUser(setByUser *bool) *ArgClause {
+	if setByUser != nil {
+		*setByUser = false
+	}
+	a.setByUser = setByUser
+	return a
+}
+
+func (a *ArgClause) isSetByUser() {
+	if a.setByUser != nil {
+		*a.setByUser = true
+	}
 }
 
 // Default values for this argument. They *must* be parseable by the value of the argument.

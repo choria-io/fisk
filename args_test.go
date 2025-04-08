@@ -82,3 +82,37 @@ func TestSubcommandArgRequiredWithEnvar(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, 123, *flag)
 }
+
+func TestArgIsSetByUser(t *testing.T) {
+	app := newTestApp()
+	var isSet bool
+	var b bool
+	app.Arg("b", "").IsSetByUser(&isSet).Required().BoolVar(&b)
+	_, err := app.Parse([]string{"true"})
+	assert.NoError(t, err)
+	assert.True(t, b)
+	assert.True(t, isSet)
+
+	isSet = false
+	b = false
+	_, err = app.Parse([]string{})
+	assert.Error(t, err)
+	assert.False(t, b)
+	assert.False(t, isSet)
+
+	app = newTestApp()
+	app.Arg("b", "").BoolVar(&b)
+	isSet = false
+	_, err = app.Parse([]string{"false"})
+	assert.NoError(t, err)
+	assert.False(t, b)
+	assert.False(t, isSet)
+
+	app = newTestApp()
+	app.Arg("b", "").Default("false").BoolVar(&b)
+	isSet = false
+	_, err = app.Parse([]string{})
+	assert.NoError(t, err)
+	assert.False(t, b)
+	assert.False(t, isSet)
+}
