@@ -354,6 +354,7 @@ loop:
 					break loop
 				}
 				context.matchedArg(arg, token.String())
+				arg.isSetByUser()
 				context.Next()
 			} else {
 				break loop
