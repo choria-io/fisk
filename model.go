@@ -116,10 +116,17 @@ func (f *FlagModel) FormatPlaceHolder() string {
 }
 
 func (f *FlagModel) HelpWithEnvar() string {
-	if f.Envar == "" {
-		return f.Help
+	help := f.Help
+	
+	// Add default value for boolean flags
+	if f.IsBoolFlag() && len(f.Default) > 0 {
+		help = fmt.Sprintf("%s (default: %s)", help, f.Default[0])
 	}
-	return fmt.Sprintf("%s ($%s)", f.Help, f.Envar)
+	
+	if f.Envar == "" {
+		return help
+	}
+	return fmt.Sprintf("%s ($%s)", help, f.Envar)
 }
 
 type ArgGroupModel struct {
