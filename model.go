@@ -32,11 +32,20 @@ func (f *FlagGroupModel) FlagSummary() string {
 		if !ignoreInCount[flag.Name] {
 			count++
 		}
-
+		
 		if flag.Required {
 			if flag.IsBoolFlag() {
 				if flag.IsNegatable() {
-					out = append(out, fmt.Sprintf("--[no-]%s", flag.Name))
+					help := fmt.Sprintf("--[no-]%s", flag.Name)
+
+					if len(flag.Default) > 0 {
+						b, _ := strconv.ParseBool(flag.Default[0])
+						if b {
+							help = fmt.Sprintf("--no-%s", flag.Name)
+						}
+					}
+
+					out = append(out, help)
 				} else {
 					out = append(out, fmt.Sprintf("--%s=%s", flag.Name, flag.FormatPlaceHolder()))
 				}

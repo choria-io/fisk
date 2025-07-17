@@ -58,7 +58,7 @@ func TestHiddenCommand(t *testing.T) {
 		a.Parse(nil)
 		// a.Parse([]string{"--help"})
 		usage := buf.String()
-		t.Logf("Usage for %s is:\n%s\n", tp.name, usage)
+		//t.Logf("Usage for %s is:\n%s\n", tp.name, usage)
 
 		assert.NotContains(t, usage, "hidden")
 		assert.Contains(t, usage, "visible")

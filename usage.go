@@ -7,6 +7,7 @@ import (
 	"go/doc"
 	"go/doc/comment"
 	"io"
+	"strconv"
 	"strings"
 	"text/template"
 )
@@ -90,9 +91,16 @@ func formatCmdUsage(app *ApplicationModel, cmd *CmdModel) string {
 func formatFlag(haveShort bool, flag *FlagModel) string {
 	flagString := ""
 	flagName := flag.Name
-
+	
 	if flag.IsNegatable() {
-		flagName = "[no-]" + flagName
+		flagName = "[no-]" + flag.Name
+
+		if len(flag.Default) > 0 {
+			b, _ := strconv.ParseBool(flag.Default[0])
+			if b {
+				flagName = "no-" + flag.Name
+			}
+		}
 	}
 
 	if flag.Short != 0 {

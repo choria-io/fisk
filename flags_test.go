@@ -471,7 +471,7 @@ func TestHelpForBoolFlags(t *testing.T) {
 
 	w := bytes.NewBuffer(nil)
 	app.Writer(w).Usage(nil)
-	assert.Contains(t, w.String(), "--[no-]yes")
+	assert.Contains(t, w.String(), "--no-yes")
 	assert.Contains(t, w.String(), "--[no-]no")
 	assert.Contains(t, w.String(), "--nonneg")
 }

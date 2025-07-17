@@ -199,10 +199,10 @@ func TestInterspersedTrue(t *testing.T) {
 	for i := 0; i < 2; i++ {
 		app := newTestApp()
 		if i != 0 {
-			t.Log("Setting explicit")
+			//t.Log("Setting explicit")
 			app.Interspersed(true)
 		} else {
-			t.Log("Using default")
+			//t.Log("Using default")
 		}
 		a1 := app.Arg("a1", "").String()
 		a2 := app.Arg("a2", "").String()
