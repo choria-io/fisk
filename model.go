@@ -102,16 +102,21 @@ func (f *FlagModel) FormatPlaceHolder() string {
 	if f.PlaceHolder != "" {
 		return f.PlaceHolder
 	}
+
 	if len(f.Default) > 0 {
 		ellipsis := ""
+
 		if len(f.Default) > 1 {
 			ellipsis = "..."
 		}
+
 		if _, ok := f.Value.(*stringValue); ok {
 			return strconv.Quote(f.Default[0]) + ellipsis
 		}
+	
 		return f.Default[0] + ellipsis
 	}
+
 	return strings.ToUpper(f.Name)
 }
 

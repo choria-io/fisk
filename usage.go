@@ -7,6 +7,7 @@ import (
 	"go/doc"
 	"go/doc/comment"
 	"io"
+	"strconv"
 	"strings"
 	"text/template"
 )
@@ -104,7 +105,21 @@ func formatFlag(haveShort bool, flag *FlagModel) string {
 			flagString += fmt.Sprintf("--%s", flagName)
 		}
 	}
-	if !flag.IsBoolFlag() {
+	if flag.IsBoolFlag() {
+		if flag.IsNegatable() {
+			if len(flag.Default) > 0 {
+				b, _ := strconv.ParseBool(flag.Default[0])
+				flagString += fmt.Sprintf("=%t", b)
+			} else {
+				flagString += "=false"
+			}
+		} else {
+			if len(flag.Default) > 0 {
+				b, _ := strconv.ParseBool(flag.Default[0])
+				flagString += fmt.Sprintf("=%t", b)
+			}
+		}
+	} else {
 		flagString += fmt.Sprintf("=%s", flag.FormatPlaceHolder())
 	}
 	if v, ok := flag.Value.(repeatableFlag); ok && v.IsCumulative() {
