@@ -622,42 +622,24 @@ func (a *Application) execute(context *ParseContext, selected []string) (string,
 }
 
 func (a *Application) validateFlagsAndArgs(context *ParseContext) error {
-	flagElements := map[string]*ParseElement{}
 	for _, element := range context.Elements {
 		if flag, ok := element.Clause.(*FlagClause); ok {
-			if flag.validator == nil {
-				return nil
+			if flag.validator != nil {
+				err := flag.validator(*element.Value)
+				if err != nil {
+					return fmt.Errorf("%s: %w", flag.name, err)
+				}
 			}
-			flagElements[flag.name] = element
 		}
 	}
 
-	argElements := map[string]*ParseElement{}
 	for _, element := range context.Elements {
 		if arg, ok := element.Clause.(*ArgClause); ok {
-			if arg.validator == nil {
-				return nil
-			}
-			argElements[arg.name] = element
-		}
-	}
-
-	for _, flag := range flagElements {
-		clause := flag.Clause.(*FlagClause)
-		if clause.validator != nil {
-			err := clause.validator(*flag.Value)
-			if err != nil {
-				return fmt.Errorf("%s: %w", clause.name, err)
-			}
-		}
-	}
-
-	for _, arg := range argElements {
-		clause := arg.Clause.(*ArgClause)
-		if clause.validator != nil {
-			err := clause.validator(*arg.Value)
-			if err != nil {
-				return fmt.Errorf("%s: %w", clause.name, err)
+			if arg.validator != nil {
+				err := arg.validator(*element.Value)
+				if err != nil {
+					return fmt.Errorf("%s: %w", arg.name, err)
+				}
 			}
 		}
 	}
@@ -784,7 +766,6 @@ func (a *Application) setValues(context *ParseContext) (selected []string, err e
 }
 
 func (a *Application) applyValidators(context *ParseContext) (err error) {
-	// Call command validation functions.
 	for _, element := range context.Elements {
 		if cmd, ok := element.Clause.(*CmdClause); ok && cmd.validator != nil {
 			if err = cmd.validator(cmd); err != nil {
@@ -795,8 +776,12 @@ func (a *Application) applyValidators(context *ParseContext) (err error) {
 
 	if a.validator != nil {
 		err = a.validator(a)
+		if err != nil {
+			return err
+		}
 	}
-	return err
+
+	return nil
 }
 
 func (a *Application) applyPreActions(context *ParseContext, dispatch bool) error {
