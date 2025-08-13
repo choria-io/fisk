@@ -411,7 +411,9 @@ func TestValidator(t *testing.T) {
 
 	app := newTestApp()
 
+	app.Arg("first", "First arg").String()
 	arg := app.Arg("arg", "A arg").Default("a").Validator(regexpValidator("^[abc]$")).String()
+	app.Flag("first", "First arg").String()
 	flag := app.Flag("flag", "A flag").Validator(regexpValidator("^[xyz]$")).String()
 
 	_, err := app.Parse([]string{"--flag", "x"})
@@ -421,14 +423,14 @@ func TestValidator(t *testing.T) {
 
 	*arg = ""
 	*flag = ""
-	_, err = app.Parse([]string{"b", "--flag", "x"})
+	_, err = app.Parse([]string{"1st", "b", "--flag", "x"})
 	assert.NoError(t, err)
 	assert.Equal(t, *flag, "x")
 	assert.Equal(t, *arg, "b")
 
 	*arg = ""
 	*flag = ""
-	_, err = app.Parse([]string{"z", "--flag", "x"})
+	_, err = app.Parse([]string{"1st", "z", "--flag", "x"})
 	assert.Error(t, err, `does not validate using "^[abc]$"`)
 	assert.Equal(t, *flag, "")
 	assert.Equal(t, *arg, "")
