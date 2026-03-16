@@ -252,6 +252,68 @@ func TestLLMExtraInfoDefaultHint(t *testing.T) {
 	assert.NotContains(t, usage, "LLM Information")
 }
 
+func TestLLMFORMATEnvSwitchesDefaultTemplates(t *testing.T) {
+	// Without LLMFORMAT, default help is compact
+	t.Setenv("LLMFORMAT", "")
+	var buf bytes.Buffer
+	a := New("test", "Test application").UsageWriter(&buf).Terminate(nil)
+	a.Command("read", "Read data")
+
+	a.Parse([]string{"--help"})
+	usage := buf.String()
+	assert.Contains(t, usage, "usage: test")
+	assert.NotContains(t, usage, "# test")
+
+	// With LLMFORMAT=1, default help is LLM markdown
+	t.Setenv("LLMFORMAT", "1")
+	buf.Reset()
+	a2 := New("test", "Test application").UsageWriter(&buf).Terminate(nil)
+	a2.Command("read", "Read data")
+
+	a2.Parse([]string{"--help"})
+	usage = buf.String()
+	assert.Contains(t, usage, "# test")
+	assert.Contains(t, usage, "## Commands")
+}
+
+func TestLLMFORMATEnvSwitchesErrorTemplate(t *testing.T) {
+	// Without LLMFORMAT, error usage is compact
+	t.Setenv("LLMFORMAT", "")
+	var buf bytes.Buffer
+	a := New("test", "Test application").UsageWriter(&buf).ErrorWriter(&buf).Terminate(nil)
+	a.Command("read", "Read data")
+
+	a.MustParseWithUsage([]string{})
+	usage := buf.String()
+	assert.Contains(t, usage, "usage: test")
+	assert.NotContains(t, usage, "# test")
+
+	// With LLMFORMAT=1, error usage is also LLM markdown
+	t.Setenv("LLMFORMAT", "1")
+	buf.Reset()
+	a2 := New("test", "Test application").UsageWriter(&buf).ErrorWriter(&buf).Terminate(nil)
+	a2.Command("read", "Read data")
+
+	a2.MustParseWithUsage([]string{})
+	usage = buf.String()
+	assert.Contains(t, usage, "# test")
+	assert.Contains(t, usage, "## Commands")
+}
+
+func TestLLMFORMATExplicitTemplateOverrides(t *testing.T) {
+	// LLMFORMAT=1 but user sets explicit template - user wins
+	t.Setenv("LLMFORMAT", "1")
+	var buf bytes.Buffer
+	a := New("test", "Test application").UsageWriter(&buf).Terminate(nil)
+	a.UsageTemplate(CompactMainUsageTemplate)
+	a.Command("read", "Read data")
+
+	a.Parse([]string{"--help"})
+	usage := buf.String()
+	assert.Contains(t, usage, "usage: test")
+	assert.NotContains(t, usage, "# test")
+}
+
 func TestShortMainUSage(t *testing.T) {
 	var buf bytes.Buffer
 
