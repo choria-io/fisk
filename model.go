@@ -235,13 +235,14 @@ func (c *CmdModel) String() string {
 }
 
 type ApplicationModel struct {
-	Name      string            `json:"name"`
-	Help      string            `json:"help"`
-	Cheat     string            `json:"cheat,omitempty"`
-	Version   string            `json:"version,omitempty"`
-	Author    string            `json:"author,omitempty"`
-	Cheats    map[string]string `json:"cheats,omitempty"`
-	CheatTags []string          `json:"cheat_tags,omitempty"`
+	Name         string            `json:"name"`
+	Help         string            `json:"help"`
+	Cheat        string            `json:"cheat,omitempty"`
+	Version      string            `json:"version,omitempty"`
+	Author       string            `json:"author,omitempty"`
+	Cheats       map[string]string `json:"cheats,omitempty"`
+	CheatTags    []string          `json:"cheat_tags,omitempty"`
+	LLMExtraInfo string            `json:"llm_extra_info,omitempty"`
 
 	*ArgGroupModel
 	*CmdGroupModel
@@ -256,6 +257,7 @@ func (a *Application) Model() *ApplicationModel {
 		Author:         a.author,
 		Cheats:         a.cheats,
 		CheatTags:      a.cheatTags,
+		LLMExtraInfo:   a.llmExtraInfo,
 		FlagGroupModel: a.flagGroup.Model(),
 		ArgGroupModel:  a.argGroup.Model(),
 		CmdGroupModel:  a.cmdGroup.Model(),

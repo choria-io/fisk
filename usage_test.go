@@ -189,6 +189,69 @@ func TestLLMHelpTemplateNoTags(t *testing.T) {
 	assert.NotContains(t, usage, "Tags")
 }
 
+func TestLLMExtraInfoInLLMTemplate(t *testing.T) {
+	var buf bytes.Buffer
+
+	a := New("test", "Test application").UsageWriter(&buf).Terminate(nil)
+	a.LLMExtraInformation("This tool supports tags: read-only, makes-changes, destructive.\nUse LLMFORMAT=1 for markdown help.")
+	a.Command("read", "Read data")
+
+	a.UsageTemplate(LLMHelpTemplate)
+
+	a.Parse([]string{"--help"})
+	usage := buf.String()
+	t.Logf("LLM extra info:\n%s", usage)
+	assert.Contains(t, usage, "## Additional Information")
+	assert.Contains(t, usage, "This tool supports tags")
+	assert.Contains(t, usage, "LLMFORMAT=1")
+}
+
+func TestLLMExtraInfoInCompactTemplate(t *testing.T) {
+	var buf bytes.Buffer
+
+	a := New("test", "Test application").UsageWriter(&buf).Terminate(nil)
+	a.LLMExtraInformation("Use LLMFORMAT=1 for LLM-friendly help.")
+	a.Command("read", "Read data")
+
+	// Without CLAUDECODE=1, extra info should not appear
+	t.Setenv("CLAUDECODE", "")
+	a.Parse([]string{"--help"})
+	usage := buf.String()
+	t.Logf("Compact without CLAUDECODE:\n%s", usage)
+	assert.NotContains(t, usage, "LLM Information")
+
+	// With CLAUDECODE=1, extra info should appear
+	buf.Reset()
+	t.Setenv("CLAUDECODE", "1")
+	a.Parse([]string{"--help"})
+	usage = buf.String()
+	t.Logf("Compact with CLAUDECODE:\n%s", usage)
+	assert.Contains(t, usage, "LLM Information")
+	assert.Contains(t, usage, "LLMFORMAT=1")
+}
+
+func TestLLMExtraInfoDefaultHint(t *testing.T) {
+	var buf bytes.Buffer
+
+	a := New("test", "Test application").UsageWriter(&buf).Terminate(nil)
+	a.Command("read", "Read data")
+
+	// With CLAUDECODE=1, even without explicit LLMExtraInformation(), the default hint shows
+	t.Setenv("CLAUDECODE", "1")
+	a.Parse([]string{"--help"})
+	usage := buf.String()
+	assert.Contains(t, usage, "LLM Information")
+	assert.Contains(t, usage, "--help-llm")
+	assert.Contains(t, usage, "LLMFORMAT=1")
+
+	// Without CLAUDECODE, no hint
+	buf.Reset()
+	t.Setenv("CLAUDECODE", "")
+	a.Parse([]string{"--help"})
+	usage = buf.String()
+	assert.NotContains(t, usage, "LLM Information")
+}
+
 func TestShortMainUSage(t *testing.T) {
 	var buf bytes.Buffer
 

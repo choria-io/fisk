@@ -38,6 +38,7 @@ type Application struct {
 	usageWriter        io.Writer // Destination for usage
 	usageTemplate      string
 	errorUsageTemplate string
+	llmExtraInfo       string
 	usageFuncs         template.FuncMap
 	validator          ApplicationValidator
 	terminate          func(status int) // See Terminate()
@@ -67,7 +68,7 @@ func Newf(name string, format string, a ...interface{}) *Application {
 // New creates a new Fisk application instance.
 func New(name, help string) *Application {
 	usageTemplate := CompactMainUsageTemplate
-	if os.Getenv("CLAUDECODE") == "1" {
+	if os.Getenv("LLMFORMAT") == "1" {
 		usageTemplate = LLMHelpTemplate
 	}
 
@@ -78,6 +79,7 @@ func New(name, help string) *Application {
 		usageWriter:        os.Stderr,
 		usageTemplate:      usageTemplate,
 		errorUsageTemplate: CompactMainUsageTemplate,
+		llmExtraInfo:       "This application supports LLM friendly help output. Pass --help-llm for Markdown formatted help or set the environment variable LLMFORMAT=1 to switch all help output to LLM friendly format.",
 		terminate:          os.Exit,
 		cheats:             map[string]string{},
 		cheatTags:          []string{name},
@@ -493,6 +495,12 @@ func (a *Application) Version(version string) *Application {
 		return nil
 	})
 	a.VersionFlag.UnNegatableBool()
+	return a
+}
+
+// LLMExtraInformation adds extra information to the help output for LLMs.
+func (a *Application) LLMExtraInformation(nfo string) *Application {
+	a.llmExtraInfo = nfo
 	return a
 }
 
