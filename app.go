@@ -78,7 +78,7 @@ func New(name, help string) *Application {
 		errorWriter:        os.Stderr, // Left for backwards compatibility purposes.
 		usageWriter:        os.Stderr,
 		usageTemplate:      usageTemplate,
-		errorUsageTemplate: CompactMainUsageTemplate,
+		errorUsageTemplate: usageTemplate,
 		llmExtraInfo:       "This application supports LLM friendly help output. Pass --help-llm for Markdown formatted help or set the environment variable LLMFORMAT=1 to switch all help output to LLM friendly format.",
 		terminate:          os.Exit,
 		cheats:             map[string]string{},
