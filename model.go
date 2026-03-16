@@ -16,6 +16,8 @@ var (
 		"completion-bash":        true,
 		"completion-script-bash": true,
 		"completion-script-zsh":  true,
+		"help-llm":               true,
+		"help-compact":           true,
 		"fisk-introspect":        true,
 	}
 )
@@ -190,6 +192,16 @@ func (a *ArgModel) String() string {
 
 type CmdGroupModel struct {
 	Commands []*CmdModel `json:"commands,omitempty"`
+}
+
+// HasTags returns true if any visible command in the group has tags
+func (c *CmdGroupModel) HasTags() bool {
+	for _, cmd := range c.Commands {
+		if !cmd.Hidden && len(cmd.Tags) > 0 {
+			return true
+		}
+	}
+	return false
 }
 
 func (c *CmdGroupModel) FlattenedCommands() (out []*CmdModel) {

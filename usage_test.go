@@ -43,6 +43,7 @@ func TestHiddenCommand(t *testing.T) {
 		{"Compact", CompactUsageTemplate},
 		{"Long", LongHelpTemplate},
 		{"Man", ManPageTemplate},
+		{"LLM", LLMHelpTemplate},
 	}
 
 	var buf bytes.Buffer
@@ -103,6 +104,89 @@ func TestArgEnvVar(t *testing.T) {
 	usage := buf.String()
 	assert.Contains(t, usage, "($ARG)")
 	assert.Contains(t, usage, "($FLAG)")
+}
+
+func TestLLMHelpTemplate(t *testing.T) {
+	var buf bytes.Buffer
+
+	a := New("test", "Test application").UsageWriter(&buf).Terminate(nil)
+	a.Version("1.0.0")
+
+	sub := a.Command("subscribe", "Generic subscription client").Alias("sub").Tag("read-only")
+	sub.HelpLong("Extended help about subscribe command.")
+	sub.Arg("subjects", "Subjects to subscribe to").Strings()
+	sub.Flag("queue", "Subscribe to a named queue group").String()
+	sub.Flag("raw", "Show the raw data received").Short('r').Bool()
+	sub.Flag("count", "Quit after receiving this many messages").Int()
+	sub.Flag("server", "NATS server urls").Envar("NATS_URL").PlaceHolder("URL").String()
+	sub.Flag("timeout", "Time to wait on responses").Default("5s").Duration()
+
+	a.UsageTemplate(LLMHelpTemplate)
+
+	// Test top-level help
+	a.Parse([]string{"--help"})
+	usage := buf.String()
+	t.Logf("Top-level LLM help:\n%s", usage)
+	assert.Contains(t, usage, "# test")
+	assert.Contains(t, usage, "Test application")
+	assert.Contains(t, usage, "## Commands")
+	assert.Contains(t, usage, "`subscribe`")
+	assert.NotContains(t, usage, "hidden")
+
+	// Test command-level help
+	buf.Reset()
+	a.Parse([]string{"subscribe", "--help"})
+	usage = buf.String()
+	t.Logf("Command LLM help:\n%s", usage)
+	assert.Contains(t, usage, "# test subscribe")
+	assert.Contains(t, usage, "Generic subscription client")
+	assert.Contains(t, usage, "Extended help about subscribe command.")
+	assert.Contains(t, usage, "**Tags:** read-only")
+	assert.Contains(t, usage, "**Aliases:** sub")
+	assert.Contains(t, usage, "## Arguments")
+	assert.Contains(t, usage, "`subjects`")
+	assert.Contains(t, usage, "## Flags")
+	assert.Contains(t, usage, "`--queue`")
+	assert.Contains(t, usage, "`--[no-]raw`, `-r`")
+	assert.Contains(t, usage, "`int`")
+	assert.Contains(t, usage, "`duration`")
+	assert.Contains(t, usage, "`5s`")
+	assert.Contains(t, usage, "`NATS_URL`")
+	assert.Contains(t, usage, "## Global Flags")
+}
+
+func TestLLMHelpTemplateTags(t *testing.T) {
+	var buf bytes.Buffer
+
+	a := New("test", "Test application").UsageWriter(&buf).Terminate(nil)
+	a.Command("read", "Read data").Tag("read-only")
+	a.Command("write", "Write data").Tag("makes-changes")
+	a.Command("delete", "Delete data").Tag("destructive")
+
+	a.UsageTemplate(LLMHelpTemplate)
+
+	a.Parse([]string{"--help"})
+	usage := buf.String()
+	t.Logf("Tags LLM help:\n%s", usage)
+	assert.Contains(t, usage, "Tags")
+	assert.Contains(t, usage, "read-only")
+	assert.Contains(t, usage, "makes-changes")
+	assert.Contains(t, usage, "destructive")
+}
+
+func TestLLMHelpTemplateNoTags(t *testing.T) {
+	var buf bytes.Buffer
+
+	a := New("test", "Test application").UsageWriter(&buf).Terminate(nil)
+	a.Command("read", "Read data")
+	a.Command("write", "Write data")
+
+	a.UsageTemplate(LLMHelpTemplate)
+
+	a.Parse([]string{"--help"})
+	usage := buf.String()
+	t.Logf("No Tags LLM help:\n%s", usage)
+	assert.NotContains(t, usage, "Tags")
 }
 
 func TestShortMainUSage(t *testing.T) {
