@@ -228,6 +228,7 @@ type CmdClause struct {
 	app             *Application
 	name            string
 	aliases         []string
+	tags            []string
 	help            string
 	helpLong        string
 	isDefault       bool
@@ -281,6 +282,12 @@ func (c *CmdClause) Cheat(cheat string, help string) *CmdClause {
 // Alias add an Alias for this command.
 func (c *CmdClause) Alias(name string) *CmdClause {
 	c.aliases = append(c.aliases, name)
+	return c
+}
+
+// Tag adds tags free-form to the command
+func (c *CmdClause) Tag(tags ...string) *CmdClause {
+	c.tags = append(c.tags, tags...)
 	return c
 }
 

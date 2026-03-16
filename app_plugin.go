@@ -237,6 +237,7 @@ func (c *CmdClause) addCommandsFromModel(model *CmdGroupModel) {
 		cm.pluginDelegator = &pd
 
 		cm.aliases = cmd.Aliases
+		cm.tags = cmd.Tags
 		cm.helpLong = cmd.HelpLong
 		cm.hidden = cmd.Hidden
 		cm.isDefault = cmd.Default

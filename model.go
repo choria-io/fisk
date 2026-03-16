@@ -211,6 +211,7 @@ type CmdModel struct {
 	Depth       int      `json:"-"`
 	Hidden      bool     `json:"hidden,omitempty"`
 	Default     bool     `json:"default,omitempty"`
+	Tags        []string `json:"tags,omitempty"`
 
 	*FlagGroupModel
 	*ArgGroupModel
@@ -323,6 +324,7 @@ func (c *CmdClause) Model() *CmdModel {
 		Depth:          depth,
 		Hidden:         c.hidden,
 		Default:        c.isDefault,
+		Tags:           c.tags,
 		FullCommand:    c.FullCommand(),
 		FlagGroupModel: c.flagGroup.Model(),
 		ArgGroupModel:  c.argGroup.Model(),
