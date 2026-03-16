@@ -32,6 +32,7 @@ Some historical points in time are kept:
  * More contextually useful help when using `app.MustParseWithUsage(os.Args[1:])` (`v0.1.4` or newer)
  * Default usage template is `CompactMainUsageTemplate` since `v0.3.0` 
  * Support per Flag and Argument validation since `v0.6.0`
+ * Support adding free-form tags to commands that can be used in help templates since `v0.8.0`
 
 ### UnNegatableBool
 

@@ -175,6 +175,18 @@ func TestMultipleDefaultCommands(t *testing.T) {
 	assert.Error(t, err)
 }
 
+func TestTagsCommand(t *testing.T) {
+	app := newTestApp()
+	app.Command("one", "").Tag("system", "readonly")
+	app.usageTemplate = CompactMainUsageTemplate
+	selected, _ := app.Parse([]string{"one"})
+	assert.Equal(t, "one", selected)
+
+	cmds := app.Model().FlattenedCommands()
+	assert.Equal(t, 2, len(cmds))
+	assert.Equal(t, []string{"system", "readonly"}, cmds[1].Tags)
+}
+
 func TestAliasedCommand(t *testing.T) {
 	app := newTestApp()
 	app.Command("one", "").Alias("two")
