@@ -66,12 +66,17 @@ func Newf(name string, format string, a ...interface{}) *Application {
 
 // New creates a new Fisk application instance.
 func New(name, help string) *Application {
+	usageTemplate := CompactMainUsageTemplate
+	if os.Getenv("CLAUDECODE") == "1" {
+		usageTemplate = LLMHelpTemplate
+	}
+
 	a := &Application{
 		Name:               name,
 		Help:               help,
 		errorWriter:        os.Stderr, // Left for backwards compatibility purposes.
 		usageWriter:        os.Stderr,
-		usageTemplate:      CompactMainUsageTemplate,
+		usageTemplate:      usageTemplate,
 		errorUsageTemplate: CompactMainUsageTemplate,
 		terminate:          os.Exit,
 		cheats:             map[string]string{},
@@ -87,6 +92,7 @@ func New(name, help string) *Application {
 	a.Flag("help-long", "Generate long help.").Hidden().PreAction(a.generateLongHelp).UnNegatableBool()
 	a.Flag("help-compact", "Generate compact help.").Hidden().PreAction(a.generateCompactHelp).UnNegatableBool()
 	a.Flag("help-man", "Generate a man page.").Hidden().PreAction(a.generateManPage).UnNegatableBool()
+	a.Flag("help-llm", "Generate help formatted for Large Language Models").Hidden().PreAction(a.generateLLMHelp).UnNegatableBool()
 	a.Flag("completion-bash", "Output possible completions for the given args.").Hidden().UnNegatableBoolVar(&a.completion)
 	a.Flag("completion-script-bash", "Generate completion script for bash.").Hidden().PreAction(a.generateBashCompletionScript).UnNegatableBool()
 	a.Flag("completion-script-zsh", "Generate completion script for ZSH.").Hidden().PreAction(a.generateZSHCompletionScript).UnNegatableBool()
@@ -107,6 +113,15 @@ func (a *Application) generateCompactHelp(c *ParseContext) error {
 func (a *Application) generateLongHelp(c *ParseContext) error {
 	a.Writer(os.Stdout)
 	if err := a.UsageForContextWithTemplate(c, 2, LongHelpTemplate); err != nil {
+		return err
+	}
+	a.terminate(0)
+	return nil
+}
+
+func (a *Application) generateLLMHelp(c *ParseContext) error {
+	a.Writer(os.Stdout)
+	if err := a.UsageForContextWithTemplate(c, 2, LLMHelpTemplate); err != nil {
 		return err
 	}
 	a.terminate(0)

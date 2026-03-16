@@ -287,6 +287,118 @@ Commands:
 {{end -}}
 `
 
+// LLMHelpTemplate is a usage template that renders help in Markdown format
+// suitable for consumption by Large Language Models.
+var LLMHelpTemplate = `{{define "FormatCommand" -}}
+{{if .FlagSummary}} {{.FlagSummary}}{{end -}}
+{{range .Args}}{{if not .Hidden}} {{if not .Required}}[{{end}}{{if .PlaceHolder}}{{.PlaceHolder}}{{else}}<{{.Name}}>{{end}}{{if .Value|IsCumulative}}...{{end}}{{if not .Required}}]{{end}}{{end}}{{end -}}
+{{end -}}
+
+{{define "FormatUsage" -}}
+{{template "FormatCommand" .}}{{if .Commands}} <command> [<args> ...]{{end}}
+{{end -}}
+
+{{define "LLMFormatFlags" -}}
+| Flag | Description | Type | Default | Required | Env Var |
+|------|-------------|------|---------|----------|---------|
+{{range . -}}
+{{if not .Hidden -}}
+| {{FormatFlagName .}} | {{.Help|EscapeMDTable}} | ` + "`" + `{{FlagType .}}` + "`" + ` | {{if .Default}}` + "`" + `{{FlagDefault .Default}}` + "`" + `{{end}} | {{if .Required}}Yes{{else}}No{{end}}{{if .IsCumulative}}, repeatable{{end}} | {{if .Envar}}` + "`" + `{{.Envar}}` + "`" + `{{end}} |
+{{end -}}
+{{end -}}
+{{end -}}
+
+{{define "LLMFormatArgs" -}}
+| Argument | Description | Type | Default | Required |
+|----------|-------------|------|---------|----------|
+{{range . -}}
+{{if not .Hidden -}}
+| ` + "`" + `{{.Name}}` + "`" + ` | {{.Help|EscapeMDTable}} | ` + "`" + `{{ArgType .}}` + "`" + ` | {{if .Default}}` + "`" + `{{FlagDefault .Default}}` + "`" + `{{end}} | {{if .Required}}Yes{{else}}No{{end}}{{if .IsCumulative}}, repeatable{{end}} |
+{{end -}}
+{{end -}}
+{{end -}}
+
+{{define "LLMFormatCommands" -}}
+| Command | Description |{{if .HasTags}} Tags |{{end}}
+|---------|-------------|{{if .HasTags}}------|{{end}}
+{{range .Commands -}}
+{{if not .Hidden -}}
+{{if ne .FullCommand "help" -}}
+| ` + "`" + `{{.FullCommand}}` + "`" + `{{if .Default}} (default){{end}} | {{.Help|FirstLine|EscapeMDTable}} |{{if .Tags}} {{.Tags|Join}} |{{end}}
+{{end -}}
+{{end -}}
+{{end -}}
+{{end -}}
+
+{{if .Context.SelectedCommand -}}
+# {{.App.Name}} {{.Context.SelectedCommand}}
+{{else -}}
+# {{.App.Name}}
+{{end -}}
+
+{{if .Context.SelectedCommand -}}
+{{.Context.SelectedCommand.Help}}
+{{if .Context.SelectedCommand.HelpLong}}
+{{.Context.SelectedCommand.HelpLong}}
+{{end -}}
+{{else -}}
+{{.App.Help}}
+{{end -}}
+{{if .Context.SelectedCommand -}}
+{{if .Context.SelectedCommand.Tags -}}
+
+**Tags:** {{.Context.SelectedCommand.Tags|Join}}
+{{end -}}
+{{if .Context.SelectedCommand.Aliases -}}
+
+**Aliases:** {{.Context.SelectedCommand.Aliases|Join}}
+{{end -}}
+{{end -}}
+
+## Usage
+
+` + "```" + `
+{{if .Context.SelectedCommand -}}
+{{.App.Name}} {{.Context.SelectedCommand}}{{template "FormatUsage" .Context.SelectedCommand}}
+{{- else -}}
+{{.App.Name}}{{template "FormatUsage" .App}}
+{{- end}}
+` + "```" + `
+{{if .Context.SelectedCommand -}}
+{{if .Context.Args -}}
+
+## Arguments
+
+{{template "LLMFormatArgs" .Context.Args}}
+{{end -}}
+{{if .Context.SelectedCommand.Flags|VisibleFlags -}}
+
+## Flags
+
+{{template "LLMFormatFlags" (.Context.SelectedCommand.Flags|VisibleFlags)}}
+{{end -}}
+{{if len .Context.SelectedCommand.Commands -}}
+
+## Subcommands
+
+{{template "LLMFormatCommands" .Context.SelectedCommand}}
+{{end -}}
+{{else if .App.Commands -}}
+
+## Commands
+
+{{template "LLMFormatCommands" .App}}
+{{end -}}
+{{if .Context.SelectedCommand -}}
+{{if GlobalFlags .Context|VisibleFlags -}}
+
+## Global Flags
+
+{{template "LLMFormatFlags" (GlobalFlags .Context|VisibleFlags)}}
+{{end -}}
+{{end -}}
+`
+
 // ManPageTemplate renders usage in unix man format
 var ManPageTemplate = `{{define "FormatFlags" -}}
 {{range .Flags -}}

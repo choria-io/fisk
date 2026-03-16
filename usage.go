@@ -283,6 +283,158 @@ func (a *Application) UsageForContextWithTemplate(context *ParseContext, indent 
 			scanner.Scan()
 			return scanner.Text()
 		},
+		"FlagType": func(f *FlagModel) string {
+			if f.Value == nil {
+				if f.Boolean {
+					return "bool"
+				}
+				return "string"
+			}
+
+			switch f.Value.(type) {
+			case *boolValue, *unNegatableBoolValue:
+				return "bool"
+			case *counterValue:
+				return "counter"
+			case *stringValue:
+				return "string"
+			case *intValue:
+				return "int"
+			case *int8Value:
+				return "int8"
+			case *int16Value:
+				return "int16"
+			case *int32Value:
+				return "int32"
+			case *int64Value:
+				return "int64"
+			case *uintValue:
+				return "uint"
+			case *uint8Value:
+				return "uint8"
+			case *uint16Value:
+				return "uint16"
+			case *uint32Value:
+				return "uint32"
+			case *uint64Value:
+				return "uint64"
+			case *float32Value:
+				return "float32"
+			case *float64Value:
+				return "float64"
+			case *durationValue:
+				return "duration"
+			case *bytesValue:
+				return "bytes"
+			case *ipValue, *resolvedIPValue:
+				return "ip"
+			case *tcpAddrValue:
+				return "tcp_address"
+			case *urlValue:
+				return "url"
+			case *urlListValue:
+				return "url"
+			case *fileStatValue:
+				return "path"
+			case *fileValue:
+				return "file"
+			case *regexpValue:
+				return "regexp"
+			case *stringMapValue:
+				return "key=value"
+			case *enumValue:
+				if ev, ok := f.Value.(*enumValue); ok {
+					return "enum(" + strings.Join(ev.options, "|") + ")"
+				}
+				return "enum"
+			case *enumsValue:
+				if ev, ok := f.Value.(*enumsValue); ok {
+					return "enum(" + strings.Join(ev.options, "|") + ")"
+				}
+				return "enum"
+			case *hexBytesValue:
+				return "hex"
+			default:
+				if isBoolFlag(f.Value) {
+					return "bool"
+				}
+				return "string"
+			}
+		},
+		"ArgType": func(a *ArgModel) string {
+			if a.Value == nil {
+				return "string"
+			}
+
+			switch a.Value.(type) {
+			case *stringValue:
+				return "string"
+			case *intValue:
+				return "int"
+			case *int8Value:
+				return "int8"
+			case *int16Value:
+				return "int16"
+			case *int32Value:
+				return "int32"
+			case *int64Value:
+				return "int64"
+			case *uintValue:
+				return "uint"
+			case *uint8Value:
+				return "uint8"
+			case *uint16Value:
+				return "uint16"
+			case *uint32Value:
+				return "uint32"
+			case *uint64Value:
+				return "uint64"
+			case *float32Value:
+				return "float32"
+			case *float64Value:
+				return "float64"
+			case *durationValue:
+				return "duration"
+			case *urlValue:
+				return "url"
+			case *fileStatValue:
+				return "path"
+			case *enumValue:
+				if ev, ok := a.Value.(*enumValue); ok {
+					return "enum(" + strings.Join(ev.options, "|") + ")"
+				}
+				return "enum"
+			case *enumsValue:
+				if ev, ok := a.Value.(*enumsValue); ok {
+					return "enum(" + strings.Join(ev.options, "|") + ")"
+				}
+				return "enum"
+			default:
+				return "string"
+			}
+		},
+		"FlagDefault": func(defaults []string) string {
+			if len(defaults) == 0 {
+				return ""
+			}
+			return strings.Join(defaults, ", ")
+		},
+		"FormatFlagName": func(f *FlagModel) string {
+			name := f.Name
+			if f.IsNegatable() {
+				name = "[no-]" + name
+			}
+			s := "`--" + name + "`"
+			if f.Short != 0 {
+				s += fmt.Sprintf(", `-%c`", f.Short)
+			}
+			return s
+		},
+		"EscapeMDTable": func(s string) string {
+			s = strings.ReplaceAll(s, "|", "\\|")
+			s = strings.ReplaceAll(s, "\n", " ")
+			return s
+		},
 	}
 	for k, v := range a.usageFuncs {
 		funcs[k] = v
