@@ -7,6 +7,7 @@ import (
 	"go/doc"
 	"go/doc/comment"
 	"io"
+	"os"
 	"strings"
 	"text/template"
 )
@@ -429,6 +430,9 @@ func (a *Application) UsageForContextWithTemplate(context *ParseContext, indent 
 				s += fmt.Sprintf(", `-%c`", f.Short)
 			}
 			return s
+		},
+		"IsLLMContext": func() bool {
+			return os.Getenv("CLAUDECODE") == "1"
 		},
 		"EscapeMDTable": func(s string) string {
 			s = strings.ReplaceAll(s, "|", "\\|")

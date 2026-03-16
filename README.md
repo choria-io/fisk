@@ -33,6 +33,7 @@ Some historical points in time are kept:
  * Default usage template is `CompactMainUsageTemplate` since `v0.3.0` 
  * Support per Flag and Argument validation since `v0.6.0`
  * Support adding free-form tags to commands that can be used in help templates since `v0.8.0`
+ * LLM specific help format in Markdown via `--help-llm` or auto switching in `--help` when `LLMFORMAT=1` since `v0.8.0`
 
 ### UnNegatableBool
 

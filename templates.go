@@ -139,6 +139,10 @@ Global Flags:
 Pass --help to see global flags applicable to this command.
 {{end -}}
 {{end -}}
+{{if and (IsLLMContext) (.App.LLMExtraInfo) -}}
+LLM Information:
+{{.App.LLMExtraInfo|Wrap 2}}
+{{end -}}
 `
 
 // KingpinDefaultUsageTemplate is the default usage template as used by kingpin
@@ -396,6 +400,12 @@ var LLMHelpTemplate = `{{define "FormatCommand" -}}
 
 {{template "LLMFormatFlags" (GlobalFlags .Context|VisibleFlags)}}
 {{end -}}
+{{end -}}
+{{if .App.LLMExtraInfo -}}
+
+## Additional Information
+
+{{.App.LLMExtraInfo}}
 {{end -}}
 `
 
