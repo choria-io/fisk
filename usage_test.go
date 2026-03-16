@@ -155,6 +155,22 @@ func TestLLMHelpTemplate(t *testing.T) {
 	assert.Contains(t, usage, "## Global Flags")
 }
 
+func TestLLMHelpTemplateEnumEscaping(t *testing.T) {
+	var buf bytes.Buffer
+
+	a := New("test", "Test application").UsageWriter(&buf).Terminate(nil)
+	sub := a.Command("run", "Run something")
+	sub.Flag("storage", "Storage backend").Enum("file", "f", "memory", "m")
+
+	a.UsageTemplate(LLMHelpTemplate)
+
+	a.Parse([]string{"run", "--help"})
+	usage := buf.String()
+	t.Logf("Enum escaping:\n%s", usage)
+	assert.Contains(t, usage, `enum(file\|f\|memory\|m)`)
+	assert.NotContains(t, usage, "enum(file|f")
+}
+
 func TestLLMHelpTemplateTags(t *testing.T) {
 	var buf bytes.Buffer
 

@@ -307,7 +307,7 @@ var LLMHelpTemplate = `{{define "FormatCommand" -}}
 |------|-------------|------|---------|----------|---------|
 {{range . -}}
 {{if not .Hidden -}}
-| {{FormatFlagName .}} | {{.Help|EscapeMDTable}} | ` + "`" + `{{FlagType .}}` + "`" + ` | {{if .Default}}` + "`" + `{{FlagDefault .Default}}` + "`" + `{{end}} | {{if .Required}}Yes{{else}}No{{end}}{{if .IsCumulative}}, repeatable{{end}} | {{if .Envar}}` + "`" + `{{.Envar}}` + "`" + `{{end}} |
+| {{FormatFlagName .}} | {{.Help|EscapeMDTable}} | ` + "`" + `{{FlagType .|EscapeMDTable}}` + "`" + ` | {{if .Default}}` + "`" + `{{FlagDefault .Default|EscapeMDTable}}` + "`" + `{{end}} | {{if .Required}}Yes{{else}}No{{end}}{{if .IsCumulative}}, repeatable{{end}} | {{if .Envar}}` + "`" + `{{.Envar}}` + "`" + `{{end}} |
 {{end -}}
 {{end -}}
 {{end -}}
@@ -317,7 +317,7 @@ var LLMHelpTemplate = `{{define "FormatCommand" -}}
 |----------|-------------|------|---------|----------|
 {{range . -}}
 {{if not .Hidden -}}
-| ` + "`" + `{{.Name}}` + "`" + ` | {{.Help|EscapeMDTable}} | ` + "`" + `{{ArgType .}}` + "`" + ` | {{if .Default}}` + "`" + `{{FlagDefault .Default}}` + "`" + `{{end}} | {{if .Required}}Yes{{else}}No{{end}}{{if .IsCumulative}}, repeatable{{end}} |
+| ` + "`" + `{{.Name}}` + "`" + ` | {{.Help|EscapeMDTable}} | ` + "`" + `{{ArgType .|EscapeMDTable}}` + "`" + ` | {{if .Default}}` + "`" + `{{FlagDefault .Default|EscapeMDTable}}` + "`" + `{{end}} | {{if .Required}}Yes{{else}}No{{end}}{{if .IsCumulative}}, repeatable{{end}} |
 {{end -}}
 {{end -}}
 {{end -}}
