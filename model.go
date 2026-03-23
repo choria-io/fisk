@@ -64,9 +64,10 @@ type FlagModel struct {
 	Hidden      bool     `json:"hidden,omitempty"`
 
 	// used by plugin model
-	Boolean    bool `json:"boolean"`
-	Negatable  bool `json:"negatable,omitempty"`
-	Cumulative bool `json:"cumulative"`
+	Boolean     bool     `json:"boolean"`
+	Negatable   bool     `json:"negatable,omitempty"`
+	Cumulative  bool     `json:"cumulative"`
+	Completions []string `json:"completions,omitempty"`
 
 	Value Value `json:"-"`
 }
@@ -313,6 +314,7 @@ func (f *FlagClause) Model() *FlagModel {
 	m.Boolean = m.IsBoolFlag()
 	m.Negatable = m.IsNegatable()
 	m.Cumulative = m.IsCumulative()
+	m.Completions = f.resolveCompletions()
 
 	return m
 }
