@@ -439,6 +439,14 @@ func (a *Application) UsageForContextWithTemplate(context *ParseContext, indent 
 			s = strings.ReplaceAll(s, "\n", " ")
 			return s
 		},
+		"ZshEscape": func(s string) string {
+			s = strings.ReplaceAll(s, `\`, `\\`)
+			s = strings.ReplaceAll(s, ":", `\:`)
+			return s
+		},
+		"JoinCompletions": func(vals []string) string {
+			return strings.Join(vals, ",")
+		},
 	}
 	for k, v := range a.usageFuncs {
 		funcs[k] = v

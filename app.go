@@ -98,6 +98,7 @@ func New(name, help string) *Application {
 	a.Flag("completion-bash", "Output possible completions for the given args.").Hidden().UnNegatableBoolVar(&a.completion)
 	a.Flag("completion-script-bash", "Generate completion script for bash.").Hidden().PreAction(a.generateBashCompletionScript).UnNegatableBool()
 	a.Flag("completion-script-zsh", "Generate completion script for ZSH.").Hidden().PreAction(a.generateZSHCompletionScript).UnNegatableBool()
+	a.Flag("completion-zsh-menu", "Output completion data for zsh menu mode.").Hidden().PreAction(a.generateZshMenuCompletionData).UnNegatableBool()
 	a.Flag("fisk-introspect", "Introspect the application model").Hidden().Action(a.introspectAction).UnNegatableBoolVar(&a.introspect)
 
 	return a
@@ -151,6 +152,15 @@ func (a *Application) generateBashCompletionScript(c *ParseContext) error {
 func (a *Application) generateZSHCompletionScript(c *ParseContext) error {
 	a.Writer(os.Stdout)
 	if err := a.UsageForContextWithTemplate(c, 2, ZshCompletionTemplate); err != nil {
+		return err
+	}
+	a.terminate(0)
+	return nil
+}
+
+func (a *Application) generateZshMenuCompletionData(c *ParseContext) error {
+	a.Writer(os.Stdout)
+	if err := a.UsageForContextWithTemplate(c, 0, ZshMenuCompletionDataTemplate); err != nil {
 		return err
 	}
 	a.terminate(0)
