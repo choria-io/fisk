@@ -69,6 +69,10 @@ Subcommands:
 Commands:
 {{template "FormatCommandsForTopLevel" .App}}
 {{end -}}
+{{if and (IsLLMContext) (.App.LLMExtraInfo) -}}
+LLM Information:
+{{.App.LLMExtraInfo|Wrap 2}}
+{{end -}}
 `
 
 // CompactMainUsageTemplate formats commands and subcommands in a two column
@@ -190,6 +194,10 @@ Subcommands:
 Commands:
 {{template "FormatCommands" .App}}
 {{end -}}
+{{if and (IsLLMContext) (.App.LLMExtraInfo) -}}
+LLM Information:
+{{.App.LLMExtraInfo|Wrap 2}}
+{{end -}}
 `
 
 // SeparateOptionalFlagsUsageTemplate is a usage template where command's optional flags are listed separately
@@ -288,6 +296,10 @@ Commands:
 {{else if .App.Commands -}}
 Commands:
 {{template "FormatCommandList" .App.Commands}}
+{{end -}}
+{{if and (IsLLMContext) (.App.LLMExtraInfo) -}}
+LLM Information:
+{{.App.LLMExtraInfo|Wrap 2}}
 {{end -}}
 `
 
