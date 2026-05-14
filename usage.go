@@ -311,7 +311,7 @@ func (a *Application) UsageForContextWithTemplate(context *ParseContext, indent 
 			return s
 		},
 		"IsLLMContext": func() bool {
-			return os.Getenv("CLAUDECODE") == "1"
+			return os.Getenv("CLAUDECODE") == "1" || os.Getenv("LLMFORMAT") == "1"
 		},
 		"EscapeMDTable": func(s string) string {
 			s = strings.ReplaceAll(s, "|", "\\|")
