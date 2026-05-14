@@ -105,7 +105,6 @@ func New(name, help string) *Application {
 }
 
 func (a *Application) generateCompactHelp(c *ParseContext) error {
-	a.Writer(os.Stdout)
 	if err := a.UsageForContextWithTemplate(c, 2, CompactUsageTemplate); err != nil {
 		return err
 	}
@@ -114,7 +113,6 @@ func (a *Application) generateCompactHelp(c *ParseContext) error {
 }
 
 func (a *Application) generateLongHelp(c *ParseContext) error {
-	a.Writer(os.Stdout)
 	if err := a.UsageForContextWithTemplate(c, 2, LongHelpTemplate); err != nil {
 		return err
 	}
@@ -123,7 +121,6 @@ func (a *Application) generateLongHelp(c *ParseContext) error {
 }
 
 func (a *Application) generateLLMHelp(c *ParseContext) error {
-	a.Writer(os.Stdout)
 	if err := a.UsageForContextWithTemplate(c, 2, LLMHelpTemplate); err != nil {
 		return err
 	}
