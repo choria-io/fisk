@@ -2,6 +2,7 @@ package fisk
 
 import (
 	"fmt"
+	"math"
 	"strconv"
 	"strings"
 )
@@ -70,6 +71,224 @@ type FlagModel struct {
 	Completions []string `json:"completions,omitempty"`
 
 	Value Value `json:"-"`
+}
+
+// valueTypeHint returns a short human-readable name for a Value (e.g. "int", "duration", "enum(a|b)").
+// Returns "string" when v is nil.
+func valueTypeHint(v Value) string {
+	if v == nil {
+		return "string"
+	}
+
+	switch x := v.(type) {
+	case *boolValue, *unNegatableBoolValue:
+		return "bool"
+	case *counterValue:
+		return "counter"
+	case *stringValue:
+		return "string"
+	case *intValue:
+		return "int"
+	case *int8Value:
+		return "int8"
+	case *int16Value:
+		return "int16"
+	case *int32Value:
+		return "int32"
+	case *int64Value:
+		return "int64"
+	case *uintValue:
+		return "uint"
+	case *uint8Value:
+		return "uint8"
+	case *uint16Value:
+		return "uint16"
+	case *uint32Value:
+		return "uint32"
+	case *uint64Value:
+		return "uint64"
+	case *float32Value:
+		return "float32"
+	case *float64Value:
+		return "float64"
+	case *durationValue:
+		return "duration"
+	case *bytesValue:
+		return "bytes"
+	case *ipValue, *resolvedIPValue:
+		return "ip"
+	case *tcpAddrValue:
+		return "tcp_address"
+	case *urlValue, *urlListValue:
+		return "url"
+	case *fileStatValue:
+		return "path"
+	case *fileValue:
+		return "file"
+	case *regexpValue:
+		return "regexp"
+	case *stringMapValue:
+		return "key=value"
+	case *enumValue:
+		return "enum(" + strings.Join(x.options, "|") + ")"
+	case *enumsValue:
+		return "enum(" + strings.Join(x.options, "|") + ")"
+	case *hexBytesValue:
+		return "hex"
+	default:
+		if isBoolFlag(v) {
+			return "bool"
+		}
+		return "string"
+	}
+}
+
+// valueSchema returns a JSON schema fragment describing a Value. The description is "<help> (type-hint)".
+// plainBool only matters when v is nil (plugin-model path) and forces a boolean type. cumulative wraps
+// scalar types in an array.
+func valueSchema(help string, v Value, cumulative bool, plainBool bool, helpHint bool) map[string]any {
+	hint := valueTypeHint(v)
+	if v == nil && plainBool {
+		hint = "bool"
+	}
+	desc := help
+	if helpHint {
+		if desc != "" {
+			desc = desc + " (" + hint + ")"
+		} else {
+			desc = "(" + hint + ")"
+		}
+	}
+
+	schema := map[string]any{
+		"description": desc,
+	}
+
+	if v == nil {
+		if plainBool {
+			schema["type"] = "boolean"
+		} else {
+			schema["type"] = "string"
+		}
+	} else {
+		switch x := v.(type) {
+		case *boolValue, *unNegatableBoolValue:
+			schema["type"] = "boolean"
+		case *counterValue, *intValue:
+			schema["type"] = "integer"
+		case *stringValue:
+			schema["type"] = "string"
+		case *int8Value:
+			schema["type"] = "integer"
+			schema["minimum"] = math.MinInt8
+			schema["maximum"] = math.MaxInt8
+		case *int16Value:
+			schema["type"] = "integer"
+			schema["minimum"] = math.MinInt16
+			schema["maximum"] = math.MaxInt16
+		case *int32Value:
+			schema["type"] = "integer"
+			schema["minimum"] = math.MinInt32
+			schema["maximum"] = math.MaxInt32
+		case *int64Value:
+			schema["type"] = "integer"
+		case *uintValue:
+			schema["type"] = "integer"
+			schema["minimum"] = 0
+		case *uint8Value:
+			schema["type"] = "integer"
+			schema["minimum"] = 0
+			schema["maximum"] = math.MaxUint8
+		case *uint16Value:
+			schema["type"] = "integer"
+			schema["minimum"] = 0
+			schema["maximum"] = math.MaxUint16
+		case *uint32Value:
+			schema["type"] = "integer"
+			schema["minimum"] = 0
+			schema["maximum"] = math.MaxUint32
+		case *uint64Value:
+			schema["type"] = "integer"
+			schema["minimum"] = 0
+		case *float32Value:
+			schema["type"] = "number"
+			schema["maximum"] = math.MaxFloat32
+		case *float64Value:
+			schema["type"] = "number"
+		case *durationValue:
+			schema["type"] = "string"
+			schema["pattern"] = `^(0|[-+]?(\d+(\.\d+)?(ns|us|µs|ms|s|m|h))+)$`
+		case *bytesValue:
+			schema["type"] = "string"
+			schema["pattern"] = `^(0|[-+]?(\d+(\.\d+)?[a-zA-Z]+)+)$`
+		case *ipValue:
+			schema["type"] = "string"
+			schema["oneOf"] = []any{
+				map[string]any{"format": "ipv4"},
+				map[string]any{"format": "ipv6"},
+			}
+		case *resolvedIPValue:
+			// hostname or IP, no usable pattern
+			schema["type"] = "string"
+		case *tcpAddrValue:
+			// host:port where port may be a service name, no usable pattern
+			schema["type"] = "string"
+		case *urlValue:
+			schema["type"] = "string"
+			schema["format"] = "uri-reference"
+		case *urlListValue:
+			schema["type"] = "array"
+			schema["items"] = map[string]any{
+				"type":   "string",
+				"format": "uri-reference",
+			}
+		case *fileStatValue:
+			schema["type"] = "string"
+		case *fileValue:
+			schema["type"] = "string"
+		case *regexpValue:
+			schema["type"] = "string"
+		case *stringMapValue:
+			schema["type"] = "object"
+			schema["additionalProperties"] = map[string]any{
+				"type": "string",
+			}
+		case *enumValue:
+			schema["type"] = "string"
+			schema["enum"] = x.options
+		case *enumsValue:
+			schema["type"] = "array"
+			schema["items"] = map[string]any{
+				"type": "string",
+				"enum": x.options,
+			}
+		case *hexBytesValue:
+			schema["type"] = "string"
+			schema["pattern"] = `^([0-9a-fA-F]{2})*$`
+		default:
+			if isBoolFlag(v) {
+				schema["type"] = "boolean"
+			} else {
+				schema["type"] = "string"
+			}
+		}
+	}
+
+	if cumulative {
+		if t, ok := schema["type"].(string); ok && t != "array" && t != "object" {
+			schema["type"] = "array"
+			schema["items"] = map[string]any{"type": t}
+		}
+	}
+
+	return schema
+}
+
+// Schema returns a JSON schema fragment for the flag, the schema does not reflect flag name nor if it's required as that is for the parent property, callers should set those if needed.//
+//
+// when typeHint is true the description will have a type hint added to it
+func (f *FlagModel) Schema(typeHint bool) map[string]any {
+	return valueSchema(f.Help, f.Value, f.Cumulative, f.Boolean, typeHint)
 }
 
 func (f *FlagModel) String() string {
@@ -189,6 +408,13 @@ func (a *ArgModel) String() string {
 	}
 
 	return a.Value.String()
+}
+
+// Schema returns a JSON schema fragment for the argument, the schema does not reflect argument name nor if its required as that is for the parent property, callers should set those if needed.
+//
+// when typeHint is true the description will have a type hint added to it
+func (a *ArgModel) Schema(typeHint bool) map[string]any {
+	return valueSchema(a.Help, a.Value, a.Cumulative, false, typeHint)
 }
 
 type CmdGroupModel struct {
