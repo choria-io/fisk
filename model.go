@@ -206,7 +206,7 @@ func valueSchema(help string, v Value, cumulative bool, plainBool bool, helpHint
 		case *uint32Value:
 			schema["type"] = "integer"
 			schema["minimum"] = 0
-			schema["maximum"] = math.MaxUint32
+			schema["maximum"] = uint32(math.MaxUint32)
 		case *uint64Value:
 			schema["type"] = "integer"
 			schema["minimum"] = 0
