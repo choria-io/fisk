@@ -1,0 +1,36 @@
+Supported:
+
+All basic types: object, array, string, integer, number, boolean, null
+enum (strings, numbers, bools, or nulls only - no complex types)
+const
+anyOf and allOf (with limitations - allOf with $ref not supported)
+$ref, $def, and definitions (external $ref not supported)
+default property for all supported types
+required and additionalProperties (must be set to false for objects)
+String formats: date-time, time, date, duration, email, hostname, uri, ipv4, ipv6, uuid
+Array minItems (only values 0 and 1 supported)
+
+Not Supported:
+
+Recursive schemas
+Complex types within enums
+External $ref (for example, '$ref': 'http://...')
+Numerical constraints (minimum, maximum, multipleOf, etc.)
+String constraints (minLength, maxLength)
+Array constraints beyond minItems of 0 or 1
+additionalProperties set to anything other than false
+
+Regex:
+
+Supported regex features:
+
+Full matching (^...$) and partial matching
+Quantifiers: *, +, ?, simple {n,m} cases
+Character classes: [], ., \d, \w, \s
+Groups: (...)
+NOT supported:
+
+Backreferences to groups (for example, \1, \2)
+Lookahead/lookbehind assertions (for example, (?=...), (?!...))
+Word boundaries: \b, \B
+Complex {n,m} quantifiers with large ranges
