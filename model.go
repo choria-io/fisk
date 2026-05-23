@@ -521,6 +521,9 @@ func (c *CmdModel) schema(typeHint bool, restricted bool) map[string]any {
 
 	if c.ArgGroupModel != nil {
 		for _, arg := range c.Args {
+			if arg.Hidden {
+				continue
+			}
 			if restricted {
 				properties[arg.Name] = arg.RestrictedSchema(typeHint)
 			} else {
@@ -534,6 +537,9 @@ func (c *CmdModel) schema(typeHint bool, restricted bool) map[string]any {
 
 	if c.FlagGroupModel != nil {
 		for _, flag := range c.Flags {
+			if flag.Hidden {
+				continue
+			}
 			if restricted {
 				properties[flag.Name] = flag.RestrictedSchema(typeHint)
 			} else {
