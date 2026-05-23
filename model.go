@@ -145,8 +145,10 @@ func valueTypeHint(v Value) string {
 
 // valueSchema returns a JSON schema fragment describing a Value. The description is "<help> (type-hint)".
 // plainBool only matters when v is nil (plugin-model path) and forces a boolean type. cumulative wraps
-// scalar types in an array.
-func valueSchema(help string, v Value, cumulative bool, plainBool bool, helpHint bool) map[string]any {
+// scalar types in an array. When anthropic is true, the schema is restricted to the subset supported
+// by Anthropic models: no numerical bounds, no map-style additionalProperties, "uri" instead of
+// "uri-reference", and objects have additionalProperties set to false.
+func valueSchema(help string, v Value, cumulative bool, plainBool bool, helpHint bool, anthropic bool) map[string]any {
 	hint := valueTypeHint(v)
 	if v == nil && plainBool {
 		hint = "bool"
@@ -162,6 +164,11 @@ func valueSchema(help string, v Value, cumulative bool, plainBool bool, helpHint
 
 	schema := map[string]any{
 		"description": desc,
+	}
+
+	urlFormat := "uri-reference"
+	if anthropic {
+		urlFormat = "uri"
 	}
 
 	if v == nil {
@@ -180,39 +187,57 @@ func valueSchema(help string, v Value, cumulative bool, plainBool bool, helpHint
 			schema["type"] = "string"
 		case *int8Value:
 			schema["type"] = "integer"
-			schema["minimum"] = math.MinInt8
-			schema["maximum"] = math.MaxInt8
+			if !anthropic {
+				schema["minimum"] = math.MinInt8
+				schema["maximum"] = math.MaxInt8
+			}
 		case *int16Value:
 			schema["type"] = "integer"
-			schema["minimum"] = math.MinInt16
-			schema["maximum"] = math.MaxInt16
+			if !anthropic {
+				schema["minimum"] = math.MinInt16
+				schema["maximum"] = math.MaxInt16
+			}
 		case *int32Value:
 			schema["type"] = "integer"
-			schema["minimum"] = math.MinInt32
-			schema["maximum"] = math.MaxInt32
+			if !anthropic {
+				schema["minimum"] = math.MinInt32
+				schema["maximum"] = math.MaxInt32
+			}
 		case *int64Value:
 			schema["type"] = "integer"
 		case *uintValue:
 			schema["type"] = "integer"
-			schema["minimum"] = 0
+			if !anthropic {
+				schema["minimum"] = 0
+			}
 		case *uint8Value:
 			schema["type"] = "integer"
-			schema["minimum"] = 0
-			schema["maximum"] = math.MaxUint8
+			if !anthropic {
+				schema["minimum"] = 0
+				schema["maximum"] = math.MaxUint8
+			}
 		case *uint16Value:
 			schema["type"] = "integer"
-			schema["minimum"] = 0
-			schema["maximum"] = math.MaxUint16
+			if !anthropic {
+				schema["minimum"] = 0
+				schema["maximum"] = math.MaxUint16
+			}
 		case *uint32Value:
 			schema["type"] = "integer"
-			schema["minimum"] = 0
-			schema["maximum"] = uint32(math.MaxUint32)
+			if !anthropic {
+				schema["minimum"] = 0
+				schema["maximum"] = uint32(math.MaxUint32)
+			}
 		case *uint64Value:
 			schema["type"] = "integer"
-			schema["minimum"] = 0
+			if !anthropic {
+				schema["minimum"] = 0
+			}
 		case *float32Value:
 			schema["type"] = "number"
-			schema["maximum"] = math.MaxFloat32
+			if !anthropic {
+				schema["maximum"] = math.MaxFloat32
+			}
 		case *float64Value:
 			schema["type"] = "number"
 		case *durationValue:
@@ -235,12 +260,12 @@ func valueSchema(help string, v Value, cumulative bool, plainBool bool, helpHint
 			schema["type"] = "string"
 		case *urlValue:
 			schema["type"] = "string"
-			schema["format"] = "uri-reference"
+			schema["format"] = urlFormat
 		case *urlListValue:
 			schema["type"] = "array"
 			schema["items"] = map[string]any{
 				"type":   "string",
-				"format": "uri-reference",
+				"format": urlFormat,
 			}
 		case *fileStatValue:
 			schema["type"] = "string"
@@ -250,8 +275,12 @@ func valueSchema(help string, v Value, cumulative bool, plainBool bool, helpHint
 			schema["type"] = "string"
 		case *stringMapValue:
 			schema["type"] = "object"
-			schema["additionalProperties"] = map[string]any{
-				"type": "string",
+			if anthropic {
+				schema["additionalProperties"] = false
+			} else {
+				schema["additionalProperties"] = map[string]any{
+					"type": "string",
+				}
 			}
 		case *enumValue:
 			schema["type"] = "string"
@@ -288,7 +317,13 @@ func valueSchema(help string, v Value, cumulative bool, plainBool bool, helpHint
 //
 // when typeHint is true the description will have a type hint added to it
 func (f *FlagModel) Schema(typeHint bool) map[string]any {
-	return valueSchema(f.Help, f.Value, f.Cumulative, f.Boolean, typeHint)
+	return valueSchema(f.Help, f.Value, f.Cumulative, f.Boolean, typeHint, false)
+}
+
+// RestrictedSchema returns a JSON schema fragment for the flag restricted to the subset of JSON Schema
+// supported by Anthropic models. See Schema for the meaning of typeHint. Valid as per 23 May 2026.
+func (f *FlagModel) RestrictedSchema(typeHint bool) map[string]any {
+	return valueSchema(f.Help, f.Value, f.Cumulative, f.Boolean, typeHint, true)
 }
 
 func (f *FlagModel) String() string {
@@ -414,7 +449,13 @@ func (a *ArgModel) String() string {
 //
 // when typeHint is true the description will have a type hint added to it
 func (a *ArgModel) Schema(typeHint bool) map[string]any {
-	return valueSchema(a.Help, a.Value, a.Cumulative, false, typeHint)
+	return valueSchema(a.Help, a.Value, a.Cumulative, false, typeHint, false)
+}
+
+// RestrictedSchema returns a JSON schema fragment for the argument restricted to the subset of JSON Schema
+// supported by Anthropic models. See Schema for the meaning of typeHint. Valid as per 23 May 2026.
+func (a *ArgModel) RestrictedSchema(typeHint bool) map[string]any {
+	return valueSchema(a.Help, a.Value, a.Cumulative, false, typeHint, true)
 }
 
 type CmdGroupModel struct {
@@ -459,6 +500,62 @@ type CmdModel struct {
 
 func (c *CmdModel) String() string {
 	return c.FullCommand
+}
+
+// Schema returns a JSON schema object describing the command's arguments and flags as properties.
+// Required arguments and flags are listed in the "required" array. typeHint controls whether
+// individual property descriptions include a type hint.
+func (c *CmdModel) Schema(typeHint bool) map[string]any {
+	return c.schema(typeHint, false)
+}
+
+// RestrictedSchema is like Schema but each property is restricted to the subset of JSON Schema
+// supported by Anthropic models. Valid as per 23 May 2026.
+func (c *CmdModel) RestrictedSchema(typeHint bool) map[string]any {
+	return c.schema(typeHint, true)
+}
+
+func (c *CmdModel) schema(typeHint bool, restricted bool) map[string]any {
+	properties := map[string]any{}
+	var required []string
+
+	if c.ArgGroupModel != nil {
+		for _, arg := range c.Args {
+			if restricted {
+				properties[arg.Name] = arg.RestrictedSchema(typeHint)
+			} else {
+				properties[arg.Name] = arg.Schema(typeHint)
+			}
+			if arg.Required {
+				required = append(required, arg.Name)
+			}
+		}
+	}
+
+	if c.FlagGroupModel != nil {
+		for _, flag := range c.Flags {
+			if restricted {
+				properties[flag.Name] = flag.RestrictedSchema(typeHint)
+			} else {
+				properties[flag.Name] = flag.Schema(typeHint)
+			}
+			if flag.Required {
+				required = append(required, flag.Name)
+			}
+		}
+	}
+
+	schema := map[string]any{
+		"type":                 "object",
+		"additionalProperties": false,
+		"properties":           properties,
+	}
+
+	if len(required) > 0 {
+		schema["required"] = required
+	}
+
+	return schema
 }
 
 type ApplicationModel struct {
