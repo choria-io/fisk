@@ -160,7 +160,7 @@ func (c *CmdClause) pluginAction(pd *pluginDelegator) Action {
 
 		for k, v := range pd.flags {
 			if v != nil && *pd.flagsIsSet[k] {
-				args = append(args, fmt.Sprintf("--%s=%s", k, *v))
+				args = append(args, formatFlagArg(k, *v))
 			}
 		}
 
@@ -171,7 +171,7 @@ func (c *CmdClause) pluginAction(pd *pluginDelegator) Action {
 
 			for _, cv := range *v {
 				if v != nil && *pd.flagsIsSet[k] {
-					args = append(args, fmt.Sprintf("--%s=%s", k, cv))
+					args = append(args, formatFlagArg(k, cv))
 				}
 			}
 		}
@@ -181,11 +181,7 @@ func (c *CmdClause) pluginAction(pd *pluginDelegator) Action {
 				continue
 			}
 
-			if *v {
-				args = append(args, fmt.Sprintf("--%s", k))
-			} else {
-				args = append(args, fmt.Sprintf("--no-%s", k))
-			}
+			args = append(args, formatBoolFlagArg(k, *v))
 		}
 
 		for k, v := range pd.unNegBoolFlags {
@@ -193,8 +189,8 @@ func (c *CmdClause) pluginAction(pd *pluginDelegator) Action {
 				continue
 			}
 
-			if *v {
-				args = append(args, fmt.Sprintf("--%s", k))
+			if arg, ok := formatUnNegatableBoolFlagArg(k, *v); ok {
+				args = append(args, arg)
 			}
 		}
 
@@ -203,7 +199,7 @@ func (c *CmdClause) pluginAction(pd *pluginDelegator) Action {
 				continue
 			}
 
-			args = append(args, fmt.Sprintf("--%s=%s", f, pd.globalFlags.long[f].value.String()))
+			args = append(args, formatFlagArg(f, pd.globalFlags.long[f].value.String()))
 		}
 
 		// must be last
