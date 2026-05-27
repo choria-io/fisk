@@ -23,6 +23,11 @@ type pluginDelegator struct {
 	name           string
 }
 
+// introspectModel returns the application model as emitted by --fisk-introspect:
+// internal help/version/completion commands and flags are removed, and every
+// command in the tree carries its precomputed Schema and RestrictedSchema. The
+// schemas are computed here, while the arg/flag Values are still live, so they
+// survive the JSON round-trip that Value (json:"-") does not.
 func (a *Application) introspectModel() *ApplicationModel {
 	model := a.Model()
 	var nf []*FlagModel
@@ -44,7 +49,21 @@ func (a *Application) introspectModel() *ApplicationModel {
 	}
 	model.Commands = nc
 
+	populateCommandSchemas(model.Commands)
+
 	return model
+}
+
+// populateCommandSchemas computes and stores the Schema and RestrictedSchema of
+// every command in the tree. It must run while the arg/flag Values are live.
+func populateCommandSchemas(commands []*CmdModel) {
+	for _, cmd := range commands {
+		cmd.Schema = buildCommandSchema(cmd, false)
+		cmd.RestrictedSchema = buildCommandSchema(cmd, true)
+		if cmd.CmdGroupModel != nil {
+			populateCommandSchemas(cmd.Commands)
+		}
+	}
 }
 
 func (a *Application) introspectAction(_ *ParseContext) error {

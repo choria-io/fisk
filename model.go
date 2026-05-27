@@ -148,22 +148,9 @@ func valueTypeHint(v Value) string {
 // scalar types in an array. When anthropic is true, the schema is restricted to the subset supported
 // by Anthropic models: no numerical bounds, no map-style additionalProperties, "uri" instead of
 // "uri-reference", and objects have additionalProperties set to false.
-func valueSchema(help string, v Value, cumulative bool, plainBool bool, helpHint bool, anthropic bool) map[string]any {
-	hint := valueTypeHint(v)
-	if v == nil && plainBool {
-		hint = "bool"
-	}
-	desc := help
-	if helpHint {
-		if desc != "" {
-			desc = desc + " (" + hint + ")"
-		} else {
-			desc = "(" + hint + ")"
-		}
-	}
-
+func valueSchema(help string, v Value, cumulative bool, plainBool bool, anthropic bool) map[string]any {
 	schema := map[string]any{
-		"description": desc,
+		"description": help,
 	}
 
 	urlFormat := "uri-reference"
@@ -313,17 +300,16 @@ func valueSchema(help string, v Value, cumulative bool, plainBool bool, helpHint
 	return schema
 }
 
-// Schema returns a JSON schema fragment for the flag, the schema does not reflect flag name nor if it's required as that is for the parent property, callers should set those if needed.//
-//
-// when typeHint is true the description will have a type hint added to it
-func (f *FlagModel) Schema(typeHint bool) map[string]any {
-	return valueSchema(f.Help, f.Value, f.Cumulative, f.Boolean, typeHint, false)
+// Schema returns a JSON schema fragment for the flag; it does not reflect the flag
+// name nor whether it is required, as that is for the parent property to set.
+func (f *FlagModel) Schema() map[string]any {
+	return valueSchema(f.Help, f.Value, f.Cumulative, f.Boolean, false)
 }
 
 // RestrictedSchema returns a JSON schema fragment for the flag restricted to the subset of JSON Schema
-// supported by Anthropic models. See Schema for the meaning of typeHint. Valid as per 23 May 2026.
-func (f *FlagModel) RestrictedSchema(typeHint bool) map[string]any {
-	return valueSchema(f.Help, f.Value, f.Cumulative, f.Boolean, typeHint, true)
+// supported by Anthropic models. Valid as per 23 May 2026.
+func (f *FlagModel) RestrictedSchema() map[string]any {
+	return valueSchema(f.Help, f.Value, f.Cumulative, f.Boolean, true)
 }
 
 func (f *FlagModel) String() string {
@@ -445,17 +431,16 @@ func (a *ArgModel) String() string {
 	return a.Value.String()
 }
 
-// Schema returns a JSON schema fragment for the argument, the schema does not reflect argument name nor if its required as that is for the parent property, callers should set those if needed.
-//
-// when typeHint is true the description will have a type hint added to it
-func (a *ArgModel) Schema(typeHint bool) map[string]any {
-	return valueSchema(a.Help, a.Value, a.Cumulative, false, typeHint, false)
+// Schema returns a JSON schema fragment for the argument; it does not reflect the
+// argument name nor whether it is required, as that is for the parent property to set.
+func (a *ArgModel) Schema() map[string]any {
+	return valueSchema(a.Help, a.Value, a.Cumulative, false, false)
 }
 
 // RestrictedSchema returns a JSON schema fragment for the argument restricted to the subset of JSON Schema
-// supported by Anthropic models. See Schema for the meaning of typeHint. Valid as per 23 May 2026.
-func (a *ArgModel) RestrictedSchema(typeHint bool) map[string]any {
-	return valueSchema(a.Help, a.Value, a.Cumulative, false, typeHint, true)
+// supported by Anthropic models. Valid as per 23 May 2026.
+func (a *ArgModel) RestrictedSchema() map[string]any {
+	return valueSchema(a.Help, a.Value, a.Cumulative, false, true)
 }
 
 type CmdGroupModel struct {
@@ -493,6 +478,17 @@ type CmdModel struct {
 	Default     bool     `json:"default,omitempty"`
 	Tags        []string `json:"tags,omitempty"`
 
+	// Schema is a JSON schema object describing the command's arguments and flags
+	// as properties, with required ones listed in "required". It is populated
+	// during introspection (--fisk-introspect) while the underlying Values are
+	// live, so it survives the JSON round-trip that Value (json:"-") does not; it
+	// is nil on a model from Model().
+	Schema map[string]any `json:"schema,omitempty"`
+	// RestrictedSchema is like Schema but restricted to the subset of JSON Schema
+	// supported by Anthropic models (valid as per 23 May 2026). Also populated
+	// during introspection.
+	RestrictedSchema map[string]any `json:"restricted_schema,omitempty"`
+
 	*FlagGroupModel
 	*ArgGroupModel
 	*CmdGroupModel
@@ -502,20 +498,12 @@ func (c *CmdModel) String() string {
 	return c.FullCommand
 }
 
-// Schema returns a JSON schema object describing the command's arguments and flags as properties.
-// Required arguments and flags are listed in the "required" array. typeHint controls whether
-// individual property descriptions include a type hint.
-func (c *CmdModel) Schema(typeHint bool) map[string]any {
-	return c.schema(typeHint, false)
-}
-
-// RestrictedSchema is like Schema but each property is restricted to the subset of JSON Schema
-// supported by Anthropic models. Valid as per 23 May 2026.
-func (c *CmdModel) RestrictedSchema(typeHint bool) map[string]any {
-	return c.schema(typeHint, true)
-}
-
-func (c *CmdModel) schema(typeHint bool, restricted bool) map[string]any {
+// buildCommandSchema returns a JSON schema object describing the command's
+// arguments and flags as properties. Required arguments and flags are listed in
+// the "required" array. restricted limits each property to the subset of JSON
+// Schema supported by Anthropic models. It relies on the live arg/flag Values,
+// so it must be called before serialization.
+func buildCommandSchema(c *CmdModel, restricted bool) map[string]any {
 	properties := map[string]any{}
 	var required []string
 
@@ -525,9 +513,9 @@ func (c *CmdModel) schema(typeHint bool, restricted bool) map[string]any {
 				continue
 			}
 			if restricted {
-				properties[arg.Name] = arg.RestrictedSchema(typeHint)
+				properties[arg.Name] = arg.RestrictedSchema()
 			} else {
-				properties[arg.Name] = arg.Schema(typeHint)
+				properties[arg.Name] = arg.Schema()
 			}
 			if arg.Required {
 				required = append(required, arg.Name)
@@ -541,9 +529,9 @@ func (c *CmdModel) schema(typeHint bool, restricted bool) map[string]any {
 				continue
 			}
 			if restricted {
-				properties[flag.Name] = flag.RestrictedSchema(typeHint)
+				properties[flag.Name] = flag.RestrictedSchema()
 			} else {
-				properties[flag.Name] = flag.Schema(typeHint)
+				properties[flag.Name] = flag.Schema()
 			}
 			if flag.Required {
 				required = append(required, flag.Name)
