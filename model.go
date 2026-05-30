@@ -146,8 +146,8 @@ func valueTypeHint(v Value) string {
 // valueSchema returns a JSON schema fragment describing a Value. The description is "<help> (type-hint)".
 // plainBool only matters when v is nil (plugin-model path) and forces a boolean type. cumulative wraps
 // scalar types in an array. When anthropic is true, the schema is restricted to the subset supported
-// by Anthropic models: no numerical bounds, no map-style additionalProperties, "uri" instead of
-// "uri-reference", and objects have additionalProperties set to false.
+// by Anthropic models: no numerical bounds, no oneOf, no map-style additionalProperties, "uri"
+// instead of "uri-reference", and objects have additionalProperties set to false.
 func valueSchema(help string, v Value, cumulative bool, plainBool bool, anthropic bool) map[string]any {
 	schema := map[string]any{
 		"description": help,
@@ -235,9 +235,13 @@ func valueSchema(help string, v Value, cumulative bool, plainBool bool, anthropi
 			schema["pattern"] = `^(0|[-+]?(\d+(\.\d+)?[a-zA-Z]+)+)$`
 		case *ipValue:
 			schema["type"] = "string"
-			schema["oneOf"] = []any{
-				map[string]any{"format": "ipv4"},
-				map[string]any{"format": "ipv6"},
+			// Anthropic's strict schema subset does not support oneOf, so the
+			// ipv4/ipv6 alternative is only emitted for the unrestricted schema.
+			if !anthropic {
+				schema["oneOf"] = []any{
+					map[string]any{"format": "ipv4"},
+					map[string]any{"format": "ipv6"},
+				}
 			}
 		case *resolvedIPValue:
 			// hostname or IP, no usable pattern
