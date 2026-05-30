@@ -54,3 +54,40 @@ func TestIntrospectModelSchemaRoundTrip(t *testing.T) {
 	// the full Schema is also populated
 	require.NotNil(t, cmd.Schema)
 }
+
+// TestRestrictedSchemaOmitsOneOf pins that the Anthropic-restricted schema does
+// not emit oneOf for IP-typed values: Anthropic's strict schema subset rejects
+// oneOf, so the ipv4/ipv6 alternative belongs only in the unrestricted Schema.
+func TestRestrictedSchemaOmitsOneOf(t *testing.T) {
+	app := New("app", "an app")
+	set := app.Command("set", "set a thing")
+	set.Flag("addr", "an address").IP()
+
+	data, err := json.Marshal(app.introspectModel())
+	require.NoError(t, err)
+
+	var m ApplicationModel
+	require.NoError(t, json.Unmarshal(data, &m))
+
+	var cmd *CmdModel
+	for _, c := range m.Commands {
+		if c.Name == "set" {
+			cmd = c
+		}
+	}
+	require.NotNil(t, cmd)
+
+	restricted, ok := cmd.RestrictedSchema["properties"].(map[string]any)
+	require.True(t, ok)
+	addr, ok := restricted["addr"].(map[string]any)
+	require.True(t, ok)
+	require.Equal(t, "string", addr["type"])
+	require.NotContains(t, addr, "oneOf", "restricted schema must not contain oneOf")
+
+	// the unrestricted schema keeps the ipv4/ipv6 alternative
+	full, ok := cmd.Schema["properties"].(map[string]any)
+	require.True(t, ok)
+	fullAddr, ok := full["addr"].(map[string]any)
+	require.True(t, ok)
+	require.Contains(t, fullAddr, "oneOf", "unrestricted schema must keep oneOf")
+}
