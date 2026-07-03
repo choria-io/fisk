@@ -256,6 +256,7 @@ func (c *CmdClause) addCommandsFromModel(model *CmdGroupModel) {
 		cm.helpLong = cmd.HelpLong
 		cm.hidden = cmd.Hidden
 		cm.isDefault = cmd.Default
+		cm.cheat = cmd.Cheat
 
 		if cmd.CmdGroupModel == nil || len(cmd.CmdGroupModel.Commands) == 0 {
 			cm.Action(cm.pluginAction(&pd))

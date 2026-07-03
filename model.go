@@ -482,6 +482,13 @@ type CmdModel struct {
 	Default     bool     `json:"default,omitempty"`
 	Tags        []string `json:"tags,omitempty"`
 
+	// Cheat is the cheat sheet set on this command via Cheat/CheatFile, populated
+	// during introspection (--fisk-introspect) only when the cheat's label matches
+	// the command name so it can be attributed to the command that declared it.
+	// Cheats with a different label live only in the application-level
+	// ApplicationModel.Cheats, which remains the merged set across all commands.
+	Cheat string `json:"cheat,omitempty"`
+
 	// Schema is a JSON schema object describing the command's arguments and flags
 	// as properties, with required ones listed in "required". It is populated
 	// during introspection (--fisk-introspect) while the underlying Values are
@@ -662,6 +669,7 @@ func (c *CmdClause) Model() *CmdModel {
 		Hidden:         c.hidden,
 		Default:        c.isDefault,
 		Tags:           c.tags,
+		Cheat:          c.cheat,
 		FullCommand:    c.FullCommand(),
 		FlagGroupModel: c.flagGroup.Model(),
 		ArgGroupModel:  c.argGroup.Model(),
