@@ -69,6 +69,11 @@ func TestIntrospectModelPerCommandCheats(t *testing.T) {
 	// empty label defaults to the command name -> attributed to the command
 	app.Command("named", "a command").Cheat("", "# named cheat")
 
+	// label matches one of the command's aliases -> attributed to the command
+	aliased := app.Command("aliased", "a command")
+	aliased.Alias("al")
+	aliased.Cheat("al", "# aliased cheat")
+
 	// nested command whose label matches its name -> attributed
 	sub := app.Command("sub", "a sub command")
 	sub.Command("leaf", "a leaf").Cheat("leaf", "# leaf cheat")
@@ -97,6 +102,10 @@ func TestIntrospectModelPerCommandCheats(t *testing.T) {
 	require.NotNil(t, byName["named"])
 	require.Equal(t, "# named cheat", byName["named"].Cheat)
 
+	// a label matching an alias is attributed to the command
+	require.NotNil(t, byName["aliased"])
+	require.Equal(t, "# aliased cheat", byName["aliased"].Cheat)
+
 	// nested commands too
 	var leaf *CmdModel
 	for _, c := range byName["sub"].Commands {
@@ -120,6 +129,7 @@ func TestIntrospectModelPerCommandCheats(t *testing.T) {
 	require.Equal(t, "# top cheat", m.Cheats["app"])
 	require.Equal(t, "# matching cheat", m.Cheats["matching"])
 	require.Equal(t, "# named cheat", m.Cheats["named"])
+	require.Equal(t, "# aliased cheat", m.Cheats["al"])
 	require.Equal(t, "# leaf cheat", m.Cheats["leaf"])
 	require.Equal(t, "# other cheat", m.Cheats["other"])
 }
