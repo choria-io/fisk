@@ -236,6 +236,7 @@ type CmdClause struct {
 	hidden          bool
 	completionAlts  []string
 	pluginDelegator *pluginDelegator
+	cheat           string
 }
 
 func (c *CmdClause) Aliases() []string {
@@ -275,6 +276,13 @@ func (c *CmdClause) Cheat(cheat string, help string) *CmdClause {
 	}
 
 	c.app.cheats[cheat] = help
+
+	// only attribute the cheat to this command when its label matches the command
+	// name; a differently-labeled cheat stays purely in the global cheat set so we
+	// don't associate an unrelated label with the command during introspection.
+	if cheat == c.name {
+		c.cheat = help
+	}
 
 	return c
 }
